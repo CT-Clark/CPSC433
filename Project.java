@@ -7,7 +7,7 @@ public class Project {
   
   // Function that tests whether an assignment of courses is valid
   // Takes in an Assign class instance
-  public bool Constr(Assign assignment) {
+  public boolean Constr(Assign assignment) {
     bool result;
     
     return result; 
@@ -22,7 +22,13 @@ public class Project {
   }
   
   public static void main(String[] args) {
-
+  // Instantiate classes
+    
+  // Parse input
+  
+  // Run search
+    
+  // Output result
 
   }
 }
