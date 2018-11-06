@@ -1,0 +1,7 @@
+Parser for the file input
+
+Actual AI algorithm (brush up on and-trees)
+
+Instantiating the structures
+
+A way to test and print the result
