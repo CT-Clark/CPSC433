@@ -1,8 +1,11 @@
+import java.util.List;
+
 public class CourseLab {
   private String department; // CPSC/SENG
   private String number; // e.g. 433
   private String lectureNumber; // So that we know which lecture slot this corresponds to
   private String labNumber; // e.g. 01, 03
+  // List of set of not compatible, unwanted, pairs, preferences
   
   public String getDepartment() {
     return department;
