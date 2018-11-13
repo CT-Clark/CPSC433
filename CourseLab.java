@@ -38,4 +38,6 @@ public class CourseLab {
   public void setLabnumber(String s) {
     this.labNumber = s;
   }
+  
+  // TODO: Getter and setter methods for the sets of eval attributes
 }
