@@ -34,5 +34,5 @@ public class CourseLab {
   
   public void setLabnumber(String s) {
     this.labNumber = s;
-}
+  }
 }
