@@ -6,29 +6,35 @@
  */
 
 public class Project {
+  // Search control
+  public Assignment kontrol(Assignment a) {
+    return a;
+  }
+  
+  // Note on constraints: All of the constraints will be stored within the CourseLab objects
   
   // Function that tests whether an assignment of courses is valid
-  // Takes in an Assign class instance
-  public boolean Constr(Assign assignment) {
+  // Takes in an Assignment class instance
+  public boolean Constr(Assignment a) {
     bool result;
     
     return result; 
   }
   
   // Measures the soft constraints of an assignment
-  // Takes in an assign class instance
-  public int Eval(Assign assignment) {
+  // Takes in an assignment class instance
+  public int Eval(Assignment a) {
     int result;
     
     return result; 
   }
   
   public static void main(String[] args) {
-  // Instantiate classes i.e. create instances of list objects with null values
+  
     
   // Parse input - create instances of course and lab objects that correspond to the items parsed in
   // We need to decide how we're storing the hard and soft constraints
-  // We could pass them to Eval and Constr as a list?
+  // Instantiate classes i.e. create instances of necessary objects
   
   // Run search - Use Atree branch and bound search algorithm
   // Search all of the possible assignments for the one with the lowest Eval value, pursue that branch
