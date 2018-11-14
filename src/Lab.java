@@ -1,3 +1,3 @@
-public class Lab extends CourseLab{
-  
+public class Lab extends Lecture {
+    private int CourseSection;
 }

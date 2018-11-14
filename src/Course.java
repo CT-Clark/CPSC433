@@ -1,3 +1,3 @@
-public class Course extends CourseLab {
+public class Course extends Lecture {
   
 }

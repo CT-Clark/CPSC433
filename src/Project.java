@@ -11,20 +11,20 @@ public class Project {
     return a;
   }
   
-  // Note on constraints: All of the constraints will be stored within the CourseLab objects
+  // Note on constraints: All of the constraints will be stored within the Lecture objects
   
   // Function that tests whether an assignment of courses is valid
   // Takes in an Assignment class instance
   public boolean Constr(Assignment a) {
-    bool result;
+    boolean result;
     
-    return result; 
+    return false;
   }
   
   // Measures the soft constraints of an assignment
   // Takes in an assignment class instance
   public int Eval(Assignment a) {
-    int result;
+    int result = 0;
     
     return result; 
   }
