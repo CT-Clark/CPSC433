@@ -3,5 +3,5 @@
 import java.util.List;
 
 public class Assignment {
-  List<Object> slots = new List<Object>;
+  List<Slot> slots = new ArrayList<>;
 }
