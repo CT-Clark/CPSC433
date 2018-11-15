@@ -90,6 +90,7 @@ public class Slot {
 
   public String toString() {
       StringBuffer string = new StringBuffer();
+      string.append("SLOT: ");
       string.append("Type: " + (type ? "Course" : "Lab"));
       string.append("; Day: " + day);
       String time = String.valueOf(startTime);

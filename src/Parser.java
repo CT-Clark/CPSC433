@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 public class Parser {
     private String path;
+    private List<Lecture> coursesList;
+    private List<Lecture> labsList;
 
     public Parser(String path) {
         this.path = path;
@@ -78,7 +80,15 @@ public class Parser {
 
     private void savePartialAssignments(List<String> inputFile, int lastBreakpoint, int i) {
         for (String line : inputFile.subList(lastBreakpoint, i)) {
-            System.out.println(line);
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            String[] lectures = line.split(", ");
+            if(lectures.length != 2) {
+                throw new IllegalStateException();
+            }
+
         }
     }
 
@@ -101,21 +111,76 @@ public class Parser {
     }
 
     private void saveNotCompatible(List<String> inputFile, int lastBreakpoint, int counter) {
+        List<Pair> not_compatible = new ArrayList<>(counter - lastBreakpoint + 1);
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+            if(line.isEmpty()) {
+                continue;
+            }
+            String[] notCompatiblePair = line.split(",");
+            if(notCompatiblePair.length != 2) {
+                throw new IllegalStateException();
+            }
+            Lecture lec1 = produceLecture(notCompatiblePair[0]);
+            Lecture lec2 = produceLecture(notCompatiblePair[1]);
+
+            Lecture originalLec = coursesList.indexOf(lec1) == -1 ?
+                    labsList.get(
+                            labsList.indexOf(lec1)) :
+                    coursesList.get(
+                            coursesList.indexOf(lec1));
+            Lecture originalLec2 = coursesList.indexOf(lec2) == -1 ? labsList.get(labsList.indexOf(lec2)) : coursesList.get(coursesList.indexOf(lec2));
+
+            not_compatible.add(new Pair(originalLec, originalLec2));
         }
     }
 
     private void saveLabs(List<String> inputFile, int lastBreakpoint, int counter) {
+        labsList = new ArrayList<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            labsList.add(produceLab(line));
         }
     }
 
-    private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
-        for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+    public Lecture produceLecture(String representation) {
+        if(representation.contains("TUT")) {
+            return produceLab(representation);
+        } else {
+            return produceCourse(representation);
         }
+    }
+
+    public Lab produceLab(String representation) {
+        representation = representation.trim();
+        String[] courseData = representation.split("\\s");
+        if (courseData.length == 4){
+            return new Lab(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]));
+        } else if (courseData.length == 6) {
+            return new Lab(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]), Integer.parseInt(courseData[5]));
+        }
+        throw new IllegalStateException();
+    }
+
+    private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
+        coursesList = new ArrayList<>(inputFile.size());
+        for (String line : inputFile.subList(lastBreakpoint, counter)) {
+            if (line.isEmpty()) {
+                continue;
+            }
+            coursesList.add(produceCourse(line));
+        }
+    }
+
+    public Course produceCourse(String representation) {
+        representation = representation.trim();
+        String[] courseData = representation.split("\\s");
+        if (courseData.length != 4){
+            throw new IllegalStateException("Each course should be defined by four attributes!");
+        }
+        return new Course(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]));
     }
 
     private void saveLabSlots(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -127,7 +192,7 @@ public class Parser {
     }
 
     private void saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
-        List<Slot> courseList = new ArrayList<>(inputFile.size());
+        List<Slot> slotList = new ArrayList<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.replaceAll("\\s", "");
             if (line.isEmpty()) {
@@ -138,7 +203,7 @@ public class Parser {
                 throw new IllegalStateException("Each slot should be defined by four attributes!");
             }
 
-            courseList.add(new Slot(slotData[0], Integer.parseInt(slotData[1].replaceAll(":", "")),
+            slotList.add(new Slot(slotData[0], Integer.parseInt(slotData[1].replaceAll(":", "")),
                     Integer.parseInt(slotData[2]), Integer.parseInt(slotData[3]), type));
         }
     }
