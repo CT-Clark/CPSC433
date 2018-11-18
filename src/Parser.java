@@ -11,6 +11,10 @@ public class Parser {
     private String path;
     private List<Lecture> coursesList;
     private List<Lecture> labsList;
+    private List<Slot> courseSlots;
+    private List<Slot> labSlots;
+    private List<Pair> pairs;
+    private List<Pair> not_compatible;
 
     public Parser(String path) {
         this.path = path;
@@ -75,10 +79,14 @@ public class Parser {
             }
             savePartialAssignments(inputFile, lastBreakpoint, counter - 1);
         }
-        return null;
+        List<Lecture> lectures = new ArrayList<>();
+        lectures.addAll(coursesList);
+        lectures.addAll(labsList);
+        return new SearchControl(lectures, courseSlots, labSlots, not_compatible, pairs);
     }
 
     private void savePartialAssignments(List<String> inputFile, int lastBreakpoint, int i) {
+        //TODO: save partial assignment as start state
         for (String line : inputFile.subList(lastBreakpoint, i)) {
             if (line.isEmpty()) {
                 continue;
@@ -93,25 +101,55 @@ public class Parser {
     }
 
     private void savePairs(List<String> inputFile, int lastBreakpoint, int counter) {
-        for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
-        }
+        pairs = savePairedLectures(inputFile, lastBreakpoint, counter);
     }
 
     private void savePreferences(List<String> inputFile, int lastBreakpoint, int counter) {
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+            if(line.isEmpty()) {
+                continue;
+            }
+            String[] preference = line.split(",");
+
+            Lecture lec1 = Lecture.produceLecture(preference[2]);
+            Slot slot = GeneralSlot.produceSlot(preference[0] + ", " + preference[1], lec1 instanceof Lab ? !GeneralSlot.COURSE : GeneralSlot.COURSE);
+
+            if (lec1 instanceof Lab) {
+                Lecture lab = labsList.get(labsList.indexOf(lec1));
+                lab.preferedSlots.add(labSlots.get(labSlots.indexOf(slot)));
+                lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
+
+            } else {
+                Lecture lab = coursesList.get(coursesList.indexOf(lec1));
+                lab.preferedSlots.add(courseSlots.get(courseSlots.indexOf(slot)));
+                lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
+            }
         }
     }
 
     private void saveUnwanted(List<String> inputFile, int lastBreakpoint, int counter) {
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+            if(line.isEmpty()) {
+                continue;
+            }
+            String[] unwanted = line.split(",", 2);
+            Lecture lec1 = Lecture.produceLecture(unwanted[0]);
+
+            Slot slot = GeneralSlot.produceSlot(unwanted[1], lec1 instanceof Lab ? !GeneralSlot.COURSE : GeneralSlot.COURSE);
+            if(slot.getType() == GeneralSlot.COURSE) {
+                courseSlots.get(courseSlots.indexOf(slot)).saveUnwantedLecture(lec1);
+            } else {
+                courseSlots.get(courseSlots.indexOf(slot)).saveUnwantedLecture(lec1);
+            }
         }
     }
 
     private void saveNotCompatible(List<String> inputFile, int lastBreakpoint, int counter) {
-        List<Pair> not_compatible = new ArrayList<>(counter - lastBreakpoint + 1);
+        not_compatible = savePairedLectures(inputFile, lastBreakpoint, counter);
+    }
+
+    private List<Pair> savePairedLectures(List<String> inputFile, int lastBreakpoint, int counter) {
+        List<Pair> couples = new ArrayList<>(counter - lastBreakpoint + 1);
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             if(line.isEmpty()) {
                 continue;
@@ -120,8 +158,10 @@ public class Parser {
             if(notCompatiblePair.length != 2) {
                 throw new IllegalStateException();
             }
-            Lecture lec1 = produceLecture(notCompatiblePair[0]);
-            Lecture lec2 = produceLecture(notCompatiblePair[1]);
+            //To be aware: This produces redundant Lecture courses!
+            Lecture lec1 = Lecture.produceLecture(notCompatiblePair[0]);
+            Lecture lec2 = Lecture.produceLecture(notCompatiblePair[1]);
+
 
             Lecture originalLec = coursesList.indexOf(lec1) == -1 ?
                     labsList.get(
@@ -130,8 +170,9 @@ public class Parser {
                             coursesList.indexOf(lec1));
             Lecture originalLec2 = coursesList.indexOf(lec2) == -1 ? labsList.get(labsList.indexOf(lec2)) : coursesList.get(coursesList.indexOf(lec2));
 
-            not_compatible.add(new Pair(originalLec, originalLec2));
+            couples.add(new Pair(originalLec, originalLec2));
         }
+        return couples;
     }
 
     private void saveLabs(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -141,27 +182,8 @@ public class Parser {
                 continue;
             }
 
-            labsList.add(produceLab(line));
+            labsList.add(Lab.produceLab(line));
         }
-    }
-
-    public Lecture produceLecture(String representation) {
-        if(representation.contains("TUT")) {
-            return produceLab(representation);
-        } else {
-            return produceCourse(representation);
-        }
-    }
-
-    public Lab produceLab(String representation) {
-        representation = representation.trim();
-        String[] courseData = representation.split("\\s");
-        if (courseData.length == 4){
-            return new Lab(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]));
-        } else if (courseData.length == 6) {
-            return new Lab(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]), Integer.parseInt(courseData[5]));
-        }
-        throw new IllegalStateException();
     }
 
     private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -170,42 +192,28 @@ public class Parser {
             if (line.isEmpty()) {
                 continue;
             }
-            coursesList.add(produceCourse(line));
+            coursesList.add(Course.produceCourse(line));
         }
-    }
-
-    public Course produceCourse(String representation) {
-        representation = representation.trim();
-        String[] courseData = representation.split("\\s");
-        if (courseData.length != 4){
-            throw new IllegalStateException("Each course should be defined by four attributes!");
-        }
-        return new Course(courseData[0], Integer.parseInt(courseData[1]), Integer.parseInt(courseData[3]));
     }
 
     private void saveLabSlots(List<String> inputFile, int lastBreakpoint, int counter) {
-        saveSlots(inputFile, lastBreakpoint, counter, !Slot.COURSE);
+        labSlots = saveSlots(inputFile, lastBreakpoint, counter, !GeneralSlot.COURSE);
     }
 
     private void saveCourseSlots(List<String> inputFile, int lastBreakpoint, int counter) {
-        saveSlots(inputFile, lastBreakpoint, counter, Slot.COURSE);
+        courseSlots = saveSlots(inputFile, lastBreakpoint, counter, GeneralSlot.COURSE);
     }
 
-    private void saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
+    private List<Slot> saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
         List<Slot> slotList = new ArrayList<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.replaceAll("\\s", "");
             if (line.isEmpty()) {
                 continue;
             }
-            String[] slotData = line.split(",");
-            if (slotData.length != 4) {
-                throw new IllegalStateException("Each slot should be defined by four attributes!");
-            }
-
-            slotList.add(new Slot(slotData[0], Integer.parseInt(slotData[1].replaceAll(":", "")),
-                    Integer.parseInt(slotData[2]), Integer.parseInt(slotData[3]), type));
+            slotList.add(GeneralSlot.produceSlot(line, type));
         }
+        return slotList;
     }
 
     private void saveName(List<String> inputFile, int lastBreakpoint, int counter) {

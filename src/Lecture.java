@@ -1,16 +1,27 @@
-public class Lecture {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public abstract class Lecture {
     protected String department; // CPSC/SENG
     protected int number; // e.g. 433
     protected int section; // e.g. 1, 3
-    protected Slot slot;
+    protected List<Slot> preferedSlots;
+    protected int preferenceScore;
+    protected int constraintCount;
 
     public Lecture(String department, int number, int section) {
+        preferedSlots = new ArrayList<>();
         if(department.length() != 4) {
             throw new IllegalArgumentException("Department acronym must have always four letters!");
         }
         this.department = department;
         this.number = number;
         this.section = section;
+    }
+
+    public void incrementConstraints() {
+        constraintCount++;
     }
 
     public String getDepartment() {
@@ -52,7 +63,7 @@ public class Lecture {
         StringBuffer string = new StringBuffer();
         string.append("Department: " + department);
         string.append("; Number: " + number);
-        string.append("; Section: LEC " + section);
+        string.append("; Section: " + section);
         return string.toString();
     }
 
@@ -65,8 +76,22 @@ public class Lecture {
                 return true;
             }
         }
+        if (lecture instanceof String) {
+            return equals(produce((String)lecture));
+        }
         return false;
     }
+
+    protected abstract Lecture produce(String representation);
+
+    public static Lecture produceLecture(String representation) {
+        if(representation.contains("TUT")){
+            return Lab.produceLab(representation);
+        } else {
+            return Course.produceCourse(representation);
+        }
+    }
+
     // TODO: Getter and setter methods for the sets of eval attributes
 
     // TODO: Assign function - figure out how we're storing already assigned course/lab, unassigned,
