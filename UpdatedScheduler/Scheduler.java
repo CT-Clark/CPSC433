@@ -1,5 +1,8 @@
 package CPSC433master.scheduler.execution;
 
+// Authors: Stephen Booth, Marcel Baier, Cody Clark
+// Change all of the package and import dependencies as necessary
+
 import CPSC433master.scheduler.structures.Class;
 import CPSC433master.scheduler.structures.Course;
 import CPSC433master.scheduler.structures.Lab;
