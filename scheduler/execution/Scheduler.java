@@ -1,5 +1,7 @@
 package execution;
 
+// Review the package names before attempting to compile the code
+
 import structures.Class;
 import structures.Course;
 import structures.Lab;
@@ -15,9 +17,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Scanner;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Scheduler {
 
@@ -33,9 +40,18 @@ public class Scheduler {
 	public static void main(String[] args){
 	
 		// parse text file
-		File file = new File(args[0]);
+		//File file = new File(args[0]); // First argument to file
+		// Set info for parser
+		String path = args[0];
+		Path currentRelativePath = Paths.get("");
+		String s = currentRelativePath.toAbsolutePath().toString();
+		System.out.println("Current relative path is: " + s);
+		if (!Files.exists(Paths.get(path)) || !Files.isRegularFile(Paths.get(path))) {
+			throw new IllegalArgumentException("Input file not available: " + Paths.get(path) + "!");
+		}
+
 		try {
-			parser(file);
+			parseInput(args[0]);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -49,7 +65,8 @@ public class Scheduler {
 		boolean noChildren = false;
 		
 		ArrayList<Class> ranked = getRankedClasses();
-		
+
+		// This is the search control
 		while ((!rankedClasses.isEmpty()) && (!noChildren)) {			
 			possibleChildren = createChildren(currentChild);
 			
@@ -68,67 +85,84 @@ public class Scheduler {
 		
 	}
 
-	private static void parser(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String line;
-		
-		while ((line = br.readLine()) != null) {
-			if (line.matches("^Course slots:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Slot sl = parseSlot(line, "course");	
-					getSlots().add(sl);
+	// Parses the input file
+	private static void parseInput(String path) throws IOException {
+		try (Scanner scanner = new Scanner(new File(path))) {
+			List<String> inputFile = Files.readAllLines(Paths.get(path));
+
+			int lastBreakpoint = 0;
+			int counter = 0;
+			for (String line : inputFile) {
+				line = line.toLowerCase();
+				switch (line) {
+					// Name of the department
+					case "name:":
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of course slots
+					case "course slots:":
+						saveName(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of lab slots
+					case "lab slots:":
+						saveSlots(inputFile, lastBreakpoint, counter, "course");
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of courses
+					case "courses:":
+						saveSlots(inputFile, lastBreakpoint, counter, "lab");
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of labs
+					case "labs:":
+						saveCourses(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of not-compatible courses/labs
+					case "not compatible:":
+						saveLabs(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate list of courses that cannot be assigned to a particular slot
+					case "unwanted:":
+						saveNotCompatible(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate the list of courses/tutorials that should be put into a specific slot
+					// Along with the Eval penalty if they're not
+					case "preferences:":
+						saveUnwanted(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate the list of courses/labs that should be placed int othe same slot
+					case "pair:":
+						savePreferences(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
+					// Generate a partial assignment to start with
+					case "partial assignments:":
+						savePairs(inputFile, lastBreakpoint, counter);
+						lastBreakpoint = counter + 1;
+						break;
 				}
+				counter++;
 			}
-			if (line.matches("^Lab slots:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Slot sl = parseSlot(line, "lab");	
-					getSlots().add(sl);
-				}
-			}
-			if (line.matches("Courses:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Class cl = parseClass(line);
-					getClasses().add(cl);
-				}
-			}
-			if (line.matches("Labs:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Class cl = parseClass(line);
-					getClasses().add(cl);
-				}
-			}
-			if (line.matches("Not compatible:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Pair<Class, Class> pair = parsePair(line);	
-					getNotCompatible().add(pair);
-				}
-			}
-			if (line.matches("Unwanted:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Pair<Class, Slot> pair = parseUnwanted(line);
-					getUnwanted().add(pair);
-				}
-			}
-			if (line.matches("Preferences:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Pair<Pair<Class, Slot>, Double> pair = parsePreferences(line);
-					if (pair.getFirst().getSecond() != null) {						
-						getPreferences().add(pair);
-					}
-				}
-				normalizeRankings(getPreferences());
-			}
-			if (line.matches("Pair:")) {
-				while (!(line = br.readLine()).matches("^$")) {
-					Pair<Class, Class> pair = parsePair(line);
-					getPair().add(pair);
-				}
-			}
+			//savePartialAssignments(inputFile, lastBreakpoint, counter - 1);
 		}
-		br.close();
 
 	}
 
+
+
+	// Saves the name of the assignment
+	private static void saveName(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			System.out.println(line);
+		}
+	}
+
+	// Parses the line and creates a slot object
 	private static Slot parseSlot(String line, String type) {
 		String[] slotItems = line.split(",");
 		
@@ -139,13 +173,26 @@ public class Scheduler {
 		int min = Integer.parseInt(slotItems[3].replaceAll("\\s+", ""));
 		
 		Slot sl = new Slot(type, day, time, max, min);
+
 		return sl;
 	}
-	
+
+	// Saves all of the slot objects
+	private static void saveSlots(List<String> inputFile, int lastBreakpoint, int counter, String type) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			//line = line.replaceAll("\\s", "");
+			if (line.isEmpty()) {
+				continue;
+			}
+			getSlots().add(parseSlot(line, type));
+		}
+	}
+
+	// Parses the class objects
 	private static Class parseClass(String line) {
 		String[] inputLine = line.split(" ");
 		ArrayList<String> classItems = new ArrayList<String>();
-		
+
 		for (int i = 0; i < inputLine.length; i++) {
 			if (!inputLine[i].equals("")) {
 				classItems.add(inputLine[i]);
@@ -155,7 +202,7 @@ public class Scheduler {
 		String dept = classItems.get(0);
 		int id = Integer.parseInt(classItems.get(1));
 		int lecture, tutorial;
-		
+
 		if (classItems.size() < 5) {
 			if (classItems.get(2).equals("LEC")) {
 				lecture = Integer.parseInt(classItems.get(3));
@@ -168,16 +215,84 @@ public class Scheduler {
 			lecture = Integer.parseInt(classItems.get(3));
 			tutorial = Integer.parseInt(classItems.get(5));
 		}
-		
+
 		Class cl;
 		if (tutorial == -1) {
 			cl = new Course(dept, id, lecture);
 		} else {
 			cl = new Lab(dept, id, lecture, tutorial);
-		}	
+		}
 		return cl;
 	}
-	
+
+	// Saves all of the course objects
+	private static void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if (line.isEmpty()) {
+				continue;
+			}
+			getClasses().add(parseClass(line));
+		}
+	}
+
+	// Saves all the lab objects
+	private static void saveLabs(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if (line.isEmpty()) {
+				continue;
+			}
+			getClasses().add(parseClass(line));
+		}
+	}
+
+	// Saves all of the courses and labs which aren't compatible with each other
+	private static void saveNotCompatible(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if(line.isEmpty()) {
+				continue;
+			}
+			Pair<Class, Class> pair = parsePair(line);
+			getNotCompatible().add(pair);
+		}
+	}
+
+	// Saves all of the courses/labs which should not go in particular slots
+	private static void saveUnwanted(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if(line.isEmpty()) {
+				continue;
+			}
+			Pair<Class, Slot> pair = parseUnwanted(line);
+			getUnwanted().add(pair);
+		}
+	}
+
+	// Saves all of the desires course/lab slot preferences and their respective values
+	private static void savePreferences(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if(line.isEmpty()) {
+				continue;
+			}
+			Pair<Pair<Class, Slot>, Double> pair = parsePreferences(line);
+			if (pair.getFirst().getSecond() != null) {
+				getPreferences().add(pair);
+			}
+		}
+		normalizeRankings(getPreferences());
+	}
+
+	// Saves the pairs of courses/labs that should run at the same time
+	private static void savePairs(List<String> inputFile, int lastBreakpoint, int counter) {
+		for (String line : inputFile.subList(lastBreakpoint, counter)) {
+			if(line.isEmpty()) {
+				continue;
+			}
+			Pair<Class, Class> pair = parsePair(line);
+			getPair().add(pair);
+		}
+	}
+
+	// Parses the pair of courses/labs that should run at the same time
 	private static Pair<Class, Class> parsePair(String line) {
 		String[] pairItems = line.split(", ");
 		
@@ -188,7 +303,8 @@ public class Scheduler {
 		return p;
 		
 	}
-	
+
+	// Parses the unwanted course/lab slot pairings
 	private static Pair<Class, Slot> parseUnwanted(String line) {
 		String[] pairItems = line.split(", ");		
 		Class cl = parseClass(pairItems[0]); 
@@ -211,7 +327,8 @@ public class Scheduler {
 		Pair<Class, Slot> p = new Pair<Class, Slot>(cl, sl);
 		return p;
 	}
-	
+
+	// Parses the course/lab slot preferences and their respective values
 	private static Pair<Pair<Class, Slot>, Double> parsePreferences(String line) {
 		String[] pairItems = line.split(", ");
 		
@@ -969,7 +1086,7 @@ public class Scheduler {
 		Scheduler.slots = slots;
 	}
 	
-	public static ArrayList<Class> getClasses() {
+	private static ArrayList<Class> getClasses() {
 		return classes;
 	}
 
@@ -977,11 +1094,11 @@ public class Scheduler {
 		Scheduler.classes = classes;
 	}
 
-	public static ArrayList<Class> getRankedClasses() {
+	private static ArrayList<Class> getRankedClasses() {
 		return rankedClasses;
 	}
 
-	public static void setRankedClasses(ArrayList<Pair<Class, Integer>> rankList) {
+	private static void setRankedClasses(ArrayList<Pair<Class, Integer>> rankList) {
 		ArrayList<Class> rankedClasses = new ArrayList<Class>();
 		
 		for (int i = 0; i < rankList.size(); i++) {
@@ -991,15 +1108,15 @@ public class Scheduler {
 		Scheduler.rankedClasses = rankedClasses;
 	}
 
-	public static ArrayList<Pair<Slot, Integer>> getRankedSlots() {
+	private static ArrayList<Pair<Slot, Integer>> getRankedSlots() {
 		return rankedSlots;
 	}
 
-	public static void setRankedSlots(ArrayList<Pair<Slot, Integer>> rankedSlots) {
+	private static void setRankedSlots(ArrayList<Pair<Slot, Integer>> rankedSlots) {
 		Scheduler.rankedSlots = rankedSlots;
 	}
 
-	public static ArrayList<Pair<Class, Class>> getNotCompatible() {
+	private static ArrayList<Pair<Class, Class>> getNotCompatible() {
 		return notCompatible;
 	}
 
@@ -1007,7 +1124,7 @@ public class Scheduler {
 		Scheduler.notCompatible = notCompatible;
 	}
 
-	public static ArrayList<Pair<Class, Slot>> getUnwanted() {
+	private static ArrayList<Pair<Class, Slot>> getUnwanted() {
 		return unwanted;
 	}
 
@@ -1015,7 +1132,7 @@ public class Scheduler {
 		Scheduler.unwanted = unwanted;
 	}
 
-	public static ArrayList<Pair<Pair<Class, Slot>, Double>> getPreferences() {
+	private static ArrayList<Pair<Pair<Class, Slot>, Double>> getPreferences() {
 		return preferences;
 	}
 
@@ -1023,9 +1140,7 @@ public class Scheduler {
 		Scheduler.preferences = preferences;
 	}
 
-	public static ArrayList<Pair<Class, Class>> getPair() {
-		return pair;
-	}
+	public static ArrayList<Pair<Class, Class>> getPair() { return pair; }
 
 	public static void setPair(ArrayList<Pair<Class, Class>> pair) {
 		Scheduler.pair = pair;
