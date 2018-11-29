@@ -438,7 +438,8 @@ public class Scheduler {
 	// ----------------------------------------------------------------------- //
 	// -------------------- CONSTR AND ASSOCIATED METHODS -------------------- //
 	// ----------------------------------------------------------------------- //
-
+	
+	// TODO: Impliment overlap, seniorlevel check, and quizes check
 
 	public static boolean Const(Assignment a) {
 		// Ensure that course objects are in course slots, and lab objects are in lab slots
@@ -482,7 +483,7 @@ public class Scheduler {
 		return true;
 	}
 
-	// Checks whether there are more courses assigned to a slot than there should be
+	// Checks whether there are more courses/labs assigned to a slot than there should be
 	private static boolean slotMax(Assignment a) {
 		int courseCount = 0;
 		int labCount = 0;
@@ -502,6 +503,7 @@ public class Scheduler {
 		return true;
 	}
 
+	// **NOTE: NOT YET CORRECT **
 	private static boolean sectionOverlap(Assignment a) {
 		ArrayList<Slot> overlappingSlots = getOverlappingSlots(slot);
 		ArrayList<Class> overlappingClasses = new ArrayList<Class>();
@@ -542,6 +544,7 @@ public class Scheduler {
 		return true;
 	}
 
+	// **NOTE: NOT YET CORRECT **
 	private static ArrayList<Slot> getOverlappingSlots(Slot slot) {
 		ArrayList<Slot> overlappingSlots = new ArrayList<Slot>();
 		
@@ -565,6 +568,7 @@ public class Scheduler {
 		return overlappingSlots;
 	}
 
+	// **NOTE: NOT YET CORRECT **
 	// Checks whether or not two slots overlap
 	private static boolean overlapCheck(Slot s1, Slot s2) {
 		if (s1.getStartTime().equals(s2.getStartTime()) || (s1.getStartTime().isAfter(s2.getStartTime()) 
@@ -646,12 +650,14 @@ public class Scheduler {
 		}
 	}
 
+	// **NOTE: NOT YET CORRECT **
 	// Checks to see if any 500 level course has been assigned the same slot as another 500 level course
 	private static boolean seniorLevelCheck(Assignment a) {
 		if(true){}
 		return true;
 	}
 
+	// **NOTE: NOT YET CORRECT **						  
 	// check that 813 and 913 are scheduled at the correct time
 	private static boolean quizzesCheck(Assignment a) {
 
@@ -663,8 +669,12 @@ public class Scheduler {
 				// -------------------- EVAL AND ASSOCIATED METHODS -------------------- //
 				// --------------------------------------------------------------------- //
 
+				// TODO: Formating issues? Change over to a list based system
+				// This should take in an assignment object and then assign that object
+				// an eval value through the in class setter
+				// This does not actually have to return anything			  
 
-				public static double Eval(ArrayList<Pair<Slot, ArrayList<Class>>> assign, boolean star) {
+				public static void eval(Assignment a) {
 					ArrayList<Pair<Pair<Class, Slot>, Double>> preferences;
 					ArrayList<Pair<Class, Class>> pair;
 
