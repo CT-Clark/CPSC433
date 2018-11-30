@@ -1,5 +1,7 @@
 package structures;
 
+// This package defines a custom defined pair, which can hold any pair of objects
+
 public class Pair<T1, T2> {
 	
 	private T1 first;
