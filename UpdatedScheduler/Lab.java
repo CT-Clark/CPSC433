@@ -1,5 +1,8 @@
 package CPSC433master.scheduler.structures;
 
+// This class defines the lab object, which is a version of the Class superclass object
+// This defines all fields and methods for working specifically with "lab" or "tut" input
+
 public class Lab extends Class {
 
 	private int tutorial;
