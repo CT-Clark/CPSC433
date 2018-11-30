@@ -1,5 +1,10 @@
 package CPSC433master.scheduler.tree;
 
+// Authors: Stephen Booth, Marcel Baier, Cody Clark
+// This class contains all of the data about an assignment
+// It also contains the constr() method for assessing whether it's a valid assignment
+// It also contains the evalue() method for scoring the penalty of any assignment
+
 import structures.Pair;
 import structures.Slot;
 
