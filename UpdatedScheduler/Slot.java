@@ -2,6 +2,9 @@ package structures;
 
 import java.time.LocalTime;
 
+// This class defines what a slot can be, the methods and fields
+// Classes are not stored directly to a slot object, but rather are stored as a pair with the slot object
+
 public class Slot implements Cloneable {
 	
 	private String type;
