@@ -1,5 +1,7 @@
 package CPSC433master.scheduler.structures;
 
+// This class specifically defines a course object, which is a version of the class superclass object
+// This is specifically for "lectures"
 
 public class Course extends Class {
 	
