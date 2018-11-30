@@ -1,8 +1,6 @@
 package CPSC433master.scheduler.execution;
 
-// Authors: Stephen Booth, Marcel Baier, Cody Clark
-// Change all of the package and import dependencies as necessary
-
+// Custom objects
 import CPSC433master.scheduler.structures.Class;
 import CPSC433master.scheduler.structures.Course;
 import CPSC433master.scheduler.structures.Lab;
@@ -12,13 +10,9 @@ import CPSC433master.scheduler.tree.Assignment;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Scanner;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,14 +20,16 @@ import java.nio.file.Paths;
 
 public class Scheduler {
 
-	private static ArrayList<Slot> slots = new ArrayList<Slot>();
-	private static ArrayList<Class> classes = new ArrayList<Class>();
+    // Fields
+	private static ArrayList<Slot> slots = new ArrayList<>();
+	private static ArrayList<Class> classes = new ArrayList<>();
 	private static ArrayList<Class> unassignedClasses = new ArrayList<>();
-	private static ArrayList<Pair<Class, Class>> notCompatible = new ArrayList<Pair<Class, Class>>();
-	private static ArrayList<Pair<Class, Slot>> unwanted = new ArrayList<Pair<Class, Slot>>();
-	private static ArrayList<Pair<Pair<Class, Slot>, Double>> preferences = new ArrayList<Pair<Pair<Class, Slot>, Double>>();
-	private static ArrayList<Pair<Class, Class>> pair = new ArrayList<Pair<Class, Class>>();
+	private static ArrayList<Pair<Class, Class>> notCompatible = new ArrayList<>();
+	private static ArrayList<Pair<Class, Slot>> unwanted = new ArrayList<>();
+	private static ArrayList<Pair<Pair<Class, Slot>, Double>> preferences = new ArrayList<>();
+	private static ArrayList<Pair<Class, Class>> pairs = new ArrayList<>();
 	private static ArrayList<Assignment> assignList = new ArrayList<>();
+	private static Assignment partassign;
 	
 	public static void main(String[] args){
 	
@@ -51,71 +47,73 @@ public class Scheduler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		// System.out.println("Finished parsing and creating first tier nodes.");
 
-		// -------------------- INITIALIZE THE STARTING NODES -------------------- //
-
-		boolean found = false;
-		unassignedClasses.addAll(classes); // Copy all of the classes into an unassigned array
-
-		for(Class tempClass : classes) { // For each course/lab
-			for(Slot tempSlot : slots) { // Place it in a different possible slot
-				// Create a list of all of the slots
-				ArrayList<Slot> s1 = new ArrayList<>();
-				s1.addAll(slots);
-				// Create a proper assign
-				ArrayList<Pair<Slot, ArrayList<Class>>> arg = new ArrayList<>();
-				for(Slot tempSlot2 : s1) {
-					Pair<Slot, ArrayList<Class>> tp = new Pair<>();
-					tp.setFirst(tempSlot2);
-					arg.add(tp);
-				}
-				// Create a copy of the unassigned classes
-				ArrayList<Class> tc = new ArrayList<>();
-				tc.addAll(unassignedClasses);
-				Assignment a = new Assignment(arg, tc);
-				a.assignClass(tempSlot, tempClass); // Create a starting assignment for every course/lab in every slot
-				assignList.add(a); // Add that starting assignment to the list of assignments
-			}
-		}
-
+		// -------------------------------------------------------- //
 		// -------------------- SEARCH CONTROL -------------------- //
+        // -------------------------------------------------------- //
 
 		// Search for the assignment with the lowest eval value
 		// If it's finished, that's our answer
-		Pair<Assignment, Double> result = new Pair<>();
-		while(!found) {
-			result.setSecond((double)999999); // Set the first best score to slightly lower than the default eval score
+
+		double run = 0;
+		boolean foundResult = false;
+
+		while(!foundResult) {
+
+			// If there are no more nodes to expand and a solution hasn't been found, then there isn't one
+			if(assignList.size() == 0) {
+				System.out.println("No valid solution found.");
+				break;
+			}
+			run++;
+
+			//System.out.println("RUN: " + run);
+
+			Assignment result = new Assignment();
+			result.setEvalValue(1000000);
 			// Find the assignment with the lowest eval score
 			for(Assignment a : assignList) {
-				if (a.getEvalValue() < result.getSecond()) {
-					Pair<Assignment, Double> change = new Pair<>();
-					change.setFirst(a);
-					change.setSecond(a.getEvalValue());
-					result = change; // Save the result for future comparisons
+				if (a.getEvalValue() < result.getEvalValue()) {
+					result = a;
+					//System.out.println(a);
 				}
 			}
-			// If the assignment is finished, then we have our answer
-			if (result.getFirst().getSizeOfUnassignedClasses() == 0) { found = true; }
-			// If it's not finished then we assign it something from its unassigned list
+
+			// Uncomment if you would like to see progress for long runs
+			//if((run % 10) == 0) { System.out.println("RUN: " + run);
+			//System.out.println(result); }
+
+			//System.out.println("Num of Assigns in assignList: " + assignList.size());
+
+			// An answer has been found
+			if(result.getUnassignedClasses().size() == 0){
+				foundResult = true;
+				System.out.println("FINAL ASSIGNMENT");
+				System.out.println(result);
+			}
+			// If an answer hasn't been found yet...
 			else {
-				for (Class c : result.getFirst().getUnassignedClasses()) { // For each unassigned class
-					for(Slot st : slots) { // Place it in all different possible slots
-						Assignment a = new Assignment(result.getFirst().getAssign(), result.getFirst().getUnassignedClasses()); // Copy the current best answer
-						a.assignClass(st, c); // Assign one of their unassigned classes to it
-						// Check to see if the new assignment is legal
-						if(Constr(a)) {
-							a.setEvalValue(eval(a, true)); // Figure out the eval value and then add it to the list of assignments
-							assignList.add(a); // Add that assignment to the list of assignments
+				for(Class c : result.getUnassignedClasses()) {
+					for(Slot st : getSlots()) {
+
+						// Create a new node
+						Assignment a = new Assignment(result.getAssign(), result.getUnassignedClasses());
+						a.assignClass(st, c);
+						//System.out.println(a);
+
+						if(a.constr()) {
+							a.evalue(); // Update assignment evalValue
+							//a.printTotalPens();
+							assignList.add(a);
+							//System.out.println(a);
 						}
 					}
 				}
-				assignList.remove(result.getFirst()); // Remove an already expanded node from the list
 			}
+			assignList.remove(result);
 		}
-
-		// Print out results
-		result.getFirst().toString();
-		System.out.println(result.getFirst());
 
 	}
 
@@ -127,74 +125,85 @@ public class Scheduler {
 	private static void parseInput(String path) throws IOException {
 		try (Scanner scanner = new Scanner(new File(path))) {
 			List<String> inputFile = Files.readAllLines(Paths.get(path));
+			boolean partialAssignmentReached = false;
+			boolean partialAssignmentReachedAgain = false;
 
 			int lastBreakpoint = 0;
 			int counter = 0;
 			for (String line : inputFile) {
 				line = line.toLowerCase();
 				switch (line) {
-					// Name of the department
+
 					case "name:":
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of course slots
+					// Name of the department
 					case "course slots:":
 						saveName(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of lab slots
+					// Generate list of course slots
 					case "lab slots:":
 						saveSlots(inputFile, lastBreakpoint, counter, "course");
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of courses
+					// Generate list of lab slots
 					case "courses:":
 						saveSlots(inputFile, lastBreakpoint, counter, "lab");
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of labs
+					// Generate list of courses
 					case "labs:":
 						saveCourses(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of not-compatible courses/labs
+					// Generate list of labs
 					case "not compatible:":
 						saveLabs(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate list of courses that cannot be assigned to a particular slot
+					// Generate list of not-compatible courses/labs
 					case "unwanted:":
 						saveNotCompatible(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate the list of courses/tutorials that should be put into a specific slot
-					// Along with the Eval penalty if they're not
+					// Generate list of courses that cannot be assigned to a particular slot
 					case "preferences:":
 						saveUnwanted(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate the list of courses/labs that should be placed int othe same slot
+					// Generate the list of courses/tutorials that should be put into a specific slot
+					// Along with the Eval penalty if they're not
 					case "pair:":
 						savePreferences(inputFile, lastBreakpoint, counter);
 						lastBreakpoint = counter + 1;
 						break;
-					// Generate a partial assignment to start with
+					// Generate the list of courses/labs that should be placed int other same slot
 					case "partial assignments:":
 						savePairs(inputFile, lastBreakpoint, counter);
+						partialAssignmentReached = true;
+						partassign = new Assignment(); // Initialize the starting assignment
 						lastBreakpoint = counter + 1;
 						break;
 				}
 				counter++;
+
+				// We want the line after "partial assignment"
+				if(partialAssignmentReached) {
+					if(partialAssignmentReachedAgain) {
+						parsePartassign(line);
+					}
+					partialAssignmentReachedAgain = true;
+				}
+
 			}
-			// TODO: Find a way to parse and save partial assignments
-			//savePartialAssignments(inputFile, lastBreakpoint, counter - 1);
+			partassign.evalue();
+			assignList.add(partassign); // At the starting assignment to the list of assignments
 		}
 
 	}
 
-	//--------------------------------------------------//
-	//--------------------------------------------------//
-	//--------------------------------------------------//
+	// -------------------- PARSER METHODS -------------------- //
 
 	// Saves the name of the assignment
 	private static void saveName(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -212,16 +221,13 @@ public class Scheduler {
 		LocalTime time = getLocalTime(slotItems[1]);
 		int max = Integer.parseInt(slotItems[2].replaceAll("\\s+", ""));
 		int min = Integer.parseInt(slotItems[3].replaceAll("\\s+", ""));
-		
-		Slot sl = new Slot(type, day, time, max, min);
 
-		return sl;
+		return new Slot(type, day, time, max, min);
 	}
 
 	// Saves all of the slot objects
 	private static void saveSlots(List<String> inputFile, int lastBreakpoint, int counter, String type) {
 		for (String line : inputFile.subList(lastBreakpoint, counter)) {
-			//line = line.replaceAll("\\s", "");
 			if (line.isEmpty()) {
 				continue;
 			}
@@ -232,7 +238,7 @@ public class Scheduler {
 	// Parses the class objects
 	private static Class parseClass(String line) {
 		String[] inputLine = line.split(" ");
-		ArrayList<String> classItems = new ArrayList<String>();
+		ArrayList<String> classItems = new ArrayList<>();
 
 		for (int i = 0; i < inputLine.length; i++) {
 			if (!inputLine[i].equals("")) {
@@ -328,8 +334,7 @@ public class Scheduler {
 			}
 		}
 
-		Pair<Class, Slot> p = new Pair<Class, Slot>(cl, sl);
-		return p;
+		return new Pair<>(cl, sl);
 	}
 
 	// Saves all of the desires course/lab slot preferences and their respective values
@@ -351,9 +356,8 @@ public class Scheduler {
 		String[] pairItems = line.split(", ");
 
 		Pair<Class, Slot> p1 = parseUnwanted(pairItems[2] + ", " + pairItems[0] + ", " + pairItems[1]);
-		Pair<Pair<Class, Slot>, Double> p = new Pair<Pair<Class, Slot>, Double>(p1, Double.parseDouble((pairItems[3])));
 
-		return p;
+		return new Pair<>(p1, Double.parseDouble((pairItems[3])));
 	}
 
 	// Saves the pairs of courses/labs that should run at the same time
@@ -363,7 +367,7 @@ public class Scheduler {
 				continue;
 			}
 			Pair<Class, Class> pair = parsePair(line);
-			getPair().add(pair);
+			getPairs().add(pair);
 		}
 	}
 
@@ -373,12 +377,33 @@ public class Scheduler {
 		
 		Class cl1 = parseClass(pairItems[0]);
 		Class cl2 = parseClass(pairItems[1]);
-			
-		Pair<Class, Class> p = new Pair<Class, Class>(cl1, cl2);
-		return p;
+
+		return new Pair<>(cl1, cl2);
 		
 	}
 
+	// Parses the partial assignment section and initializes the assignment, even if there isn't a partassign
+	private static void parsePartassign(String line) {
+		if(line.length() > 0) {
+			String[] pairItems = line.split(", ");
+			Class cl = parseClass(pairItems[0].toUpperCase());
+
+			// Iterate through all the slots
+			for(Pair<Slot, ArrayList<Class>> p : partassign.getAssign()) {
+				// See if the Slot's type is the same as the class' type
+				if(p.getFirst().getType().equals(cl.getType())) { // If the slot is the same type...
+					// If the slot is the same day...
+					if(p.getFirst().getDay().equals(pairItems[1].toUpperCase())) {
+						// If they share a start time...
+						if(p.getFirst().getStartTime().toString().equals((getLocalTime(pairItems[2])).toString()) ) { // If the slot starts at the same time...
+							cl.setDept(cl.getDept().toUpperCase()); // Reset the case of the dept
+							partassign.assignClass(p.getFirst(), cl); // Assign the class to the slot
+						}
+					}
+				}
+			}
+		}
+	}
 
 	// -------------------------------------------------------------- //
 	// -------------------- EXTRA METHODS --------------------------- //
@@ -391,14 +416,13 @@ public class Scheduler {
 		if (timeString.length() == 4) {
 			timeString = "0" + timeString;
 		}
-		
-		LocalTime time = LocalTime.parse(timeString);
-		return time;		
+
+		return LocalTime.parse(timeString);
 	}
 
 	// Assemble all of the dedicated course slots
 	private static ArrayList<Slot> getCourseSlots() {
-		ArrayList<Slot> slots = new ArrayList<Slot>();
+		ArrayList<Slot> slots = new ArrayList<>();
 		
 		for (int i = 0; i < getSlots().size(); i++) { 
 			if (getSlots().get(i).getType().equals("course")) {
@@ -411,10 +435,10 @@ public class Scheduler {
 
 	// Assemble all the dedicated lab slots
 	private static ArrayList<Slot> getLabSlots() {
-		ArrayList<Slot> slots = new ArrayList<Slot>();
+		ArrayList<Slot> slots = new ArrayList<>();
 		
 		for (int i = 0; i < getSlots().size(); i++) { 
-			if (getSlots().get(i).getType() == "lab") {
+			if (getSlots().get(i).getType().equals("lab")) {
 				slots.add(getSlots().get(i));
 			}
 		}
@@ -422,448 +446,33 @@ public class Scheduler {
 		return slots;
 	}
 
-	// Get a list of all courses/labs assigned to a particular slot
-	private static ArrayList<Class> getClassesFromSlot(Assignment a) {
-		ArrayList<Class> classes = new ArrayList<Class>();
+    // ------------------------------------------------------------------- //
+    // -------------------- GETTER AND SETTER METHODS -------------------- //
+    // ------------------------------------------------------------------- //
 
-		for (int i = 0; i < assign.size(); i++) {
-			if (assign.get(i).getFirst().equals(slot)) {
-				classes.addAll(assign.get(i).getSecond());
-			}
-		}
 
-		return classes;
-	}
+    public static ArrayList<Slot> getSlots() {
+        return slots;
+    }
 
-	// ----------------------------------------------------------------------- //
-	// -------------------- CONSTR AND ASSOCIATED METHODS -------------------- //
-	// ----------------------------------------------------------------------- //
-	
-	// TODO: Impliment overlap, seniorlevel check, and quizes check
 
-	public static boolean Const(Assignment a) {
-		// Ensure that course objects are in course slots, and lab objects are in lab slots
-		if(!ensureType(a)) { return false; }
+    public static ArrayList<Class> getClasses() {
+        return classes;
+    }
 
-		// Ensure that the number of courses assigned to a slot is less than courseMax
-		if(!slotMax(a)) { return false; }
+    public static ArrayList<Pair<Class, Class>> getNotCompatible() {
+        return notCompatible;
+    }
 
-		// Ensure that each lab is scheduled at a different time than its course
-		if(!sectionOverlap(a)) { return false; }
+    public static ArrayList<Pair<Class, Slot>> getUnwanted() {
+        return unwanted;
+    }
 
-		// Ensure that non-compatible courses are assigned to different slots
-		if(!nonCompatible(a)) { return false; }
-		
-		// Ensure that no course is placed into a slot where it's unwanted
-		if(!unwanted(a)) { return false; }
-		
-		// Ensure that no classes take palce during lunch
-		if(!lunchBreakCheck(a)) { return false; }
+    public static ArrayList<Pair<Pair<Class, Slot>, Double>> getPreferences() {
+        return preferences;
+    }
 
-		// Ensure that LEC 9 courses are assigned in the evenings
-		if(!eveningCheck(a)) { return false; }
-		
-		// Ensure that all 500 level courses are placed into different slots
-		if(!seniorLevelCheck(a)) { return false; }
-	
-		// Ensure that CPSC 813 and CPSC 913 behave
-		if(!quizzesCheck(a))) { return false; }
+    public static ArrayList<Pair<Class, Class>> getPairs() { return pairs; }
 
-		return true;
-	}
+}
 
-	// Method for ensuring that all class objects are set to their respective slots
-	private static boolean ensureType(Assignment a) {
-		for(int i = 0; i < a.getAssign().size(); i++) { // Go through all the slots
-			Pair<Slot, ArrayList<Class>> ta = a.getAssign().get(i);
-			for(Class c : ta.getSecond()) { // Go through all the classes in the slots
-				if(!c.getType().equals(ta.getFirst().getType())) { return false; }
-			}
-		}
-		return true;
-	}
-
-	// Checks whether there are more courses/labs assigned to a slot than there should be
-	private static boolean slotMax(Assignment a) {
-		int courseCount = 0;
-		int labCount = 0;
-		for(int i = 0; i < a.getAssign().size(); i++) { // Go through all the slots
-			// Increment course or lab count if either of those courses are found
-			for(int j = 0; j < a.getAssign().get(i).getSecond().size(); j++) {
-				if(a.getAssign().get(i).getSecond().get(j).getType().equals("course")) { courseCount++; }
-				else { labCount++; }
-			}
-			// Max is exceeded, return false
-			if(courseCount > a.getAssign().get(i).getFirst().getMax() && a.getAssign().get(i).getFirst().getType().equals("course")) {
-				return false;
-			} else if (labCount > a.getAssign().get(i).getFirst().getMax() && a.getAssign().get(i).getFirst().getType().equals("lab")) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	// **NOTE: NOT YET CORRECT **
-	private static boolean sectionOverlap(Assignment a) {
-		ArrayList<Slot> overlappingSlots = getOverlappingSlots(slot);
-		ArrayList<Class> overlappingClasses = new ArrayList<Class>();
-		
-		for (int i = 0; i < overlappingSlots.size(); i++) {
-			ArrayList<Class> classesToAdd = getClassesFromSlot(overlappingSlots.get(i), assign);
-			overlappingClasses.addAll(classesToAdd);
-		}
-		
-		for (int i = 0; i < classes.size(); i++) {
-			ArrayList<Class> courses = new ArrayList<Class>();
-			ArrayList<Class> labs = new ArrayList<Class>();
-			
-			// put current class into correct array depending on type
-			if (classes.get(i).getType().equals("course")) {
-				courses.add(classes.get(i));
-			} else {
-				labs.add(classes.get(i));
-			}
-			
-			// iterate through overlapping looking for potential matches
-			for (int j = 0; j < overlappingClasses.size(); j++) {
-				if (overlappingClasses.get(j).getDept().equals(classes.get(i).getDept()) && overlappingClasses.get(j).getId() == classes.get(i).getId() 
-						&& overlappingClasses.get(j).getLecture() == classes.get(i).getLecture()) {
-					if (overlappingClasses.get(j).getType().equals("course")) {
-						courses.add(overlappingClasses.get(j));
-					} else {
-						labs.add(overlappingClasses.get(j));
-					}
-				}
-			}
-			
-			if (courses.size() > 0 && labs.size() != 0) {
-				return false;
-			}
-			
-		}
-		return true;
-	}
-
-	// **NOTE: NOT YET CORRECT **
-	private static ArrayList<Slot> getOverlappingSlots(Slot slot) {
-		ArrayList<Slot> overlappingSlots = new ArrayList<Slot>();
-		
-		//iterate through all the slots
-		for (int i = 0; i < getSlots().size(); i++) {
-			if (slot.getDay().equals("MO") || slot.getDay().equals("FR")) {
-				if (getSlots().get(i).getDay().equals("MO") || getSlots().get(i).getDay().equals("FR")) {
-					if (overlapCheck(slot, getSlots().get(i)) && !slot.equals(getSlots().get(i))) {
-						overlappingSlots.add(getSlots().get(i));
-					}
-				}	
-			} else {
-				if (getSlots().get(i).getDay().equals("TU")) {
-					if (overlapCheck(slot, getSlots().get(i)) && !slot.equals(getSlots().get(i))) {
-						overlappingSlots.add(getSlots().get(i));
-					}
-				}
-			}
-		}
-		
-		return overlappingSlots;
-	}
-
-	// **NOTE: NOT YET CORRECT **
-	// Checks whether or not two slots overlap
-	private static boolean overlapCheck(Slot s1, Slot s2) {
-		if (s1.getStartTime().equals(s2.getStartTime()) || (s1.getStartTime().isAfter(s2.getStartTime()) 
-					&& s1.getStartTime().isBefore(s2.getEndTime())) || (s1.getEndTime().isAfter(s2.getStartTime()) 
-							&& s1.getEndTime().isBefore(s2.getEndTime())) || s1.getEndTime().equals(s2.getEndTime())) {
-				return true;
-		}
-		
-		return false;
-	}
-
-	// Check to make sure all of the classes that are not compatible with each other are not assigned at the same time
-	private static boolean nonCompatible(Assignment a) {
-		for(int i = 0; i < a.getAssign().size(); i++) { // Go through all the slots
-			for(int j = 0; j < a.getAssign().get(i).getSecond().size(); j++) { // Then all the courses
-				for(int k = 0; k < notCompatible.size(); k++) {
-					// If The first of the notCompatible pairs == the assigned course, look to see
-					// if the slot contains the second of the pair
-					if(notCompatible.get(k).getFirst().equals(a.getAssign().get(i).getSecond().get(j))) {
-						if (a.getAssign().get(i).getSecond().contains(notCompatible.get(k).getSecond())) {
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	// Checks whether any courses/labs have been placed in an unwanted slot
-	private static boolean unwanted(Assignment a) {
-		for(int i = 0; i < a.getAssign().size(); i++) { // Go through all the slots
-			for (int j = 0; j < a.getAssign().get(i).getSecond().size(); j++) { // Then all the courses
-				for(int k = 0; k < unwanted.size(); k++) { // Go through all the unwanted pairs
-					if(a.getAssign().get(i).getSecond().get(j).equals(unwanted.get(k).getFirst()) && // If the course matchs
-					a.getAssign().get(i).getFirst().equals(unwanted.get(k).getSecond())) { // And the slot matches
-						return false; // Return false
-					}
-				}
-			}
-		}
-		
-		return true;
-	}
-
-	// Checks to see whether any courses/labs have been assigned to lunch time
-	private static boolean lunchBreakCheck(Assignment a) {
-		LocalTime start = LocalTime.parse("11:00");
-		LocalTime end = LocalTime.parse("12:30");
-
-		for(int i = 0; i < a.getAssign().size(); i++) { // Go through all the slots
-			for (int j = 0; j < a.getAssign().get(i).getSecond().size(); j++) { // Then all the courses
-				if(a.getAssign().get(i).getFirst().getDay().equals("TU")) { // Just check on Tuesday
-					// Now check if there's a slot at that time
-					if(a.getAssign().get(i).getFirst().getStartTime().equals(start) ||
-							(a.getAssign().get(i).getFirst().getStartTime().isAfter(start)) &&
-									a.getAssign().get(i).getFirst().getStartTime().isBefore(end)) {
-						// If there is, check if a course has been scheduled into there
-						if (a.getAssign().get(i).getSecond().get(j).getType().equals("course")) {
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	// Checks to see whether the correct courses have been placed in the evening
-	private static boolean eveningCheck(Assignment a){ for (int i = 0; i < a.getAssign().size(); i++) {
-		// Go through all the slots
-		for (int j = 0; j < a.getAssign().get(i).getSecond().size(); j++) {
-			// Then all the courses
-			if (a.getAssign().get(i).getSecond().get(j).getLecture() >= 90) {
-				if (a.getAssign().get(i).getFirst().getStartTime().isBefore(LocalTime.parse("18:00"))) {
-					return false;
-				}
-			}
-		}
-	}
-
-	// **NOTE: NOT YET CORRECT **
-	// Checks to see if any 500 level course has been assigned the same slot as another 500 level course
-	private static boolean seniorLevelCheck(Assignment a) {
-		if(true){}
-		return true;
-	}
-
-	// **NOTE: NOT YET CORRECT **						  
-	// check that 813 and 913 are scheduled at the correct time
-	private static boolean quizzesCheck(Assignment a) {
-
-		return true;
-	}
-
-
-				// --------------------------------------------------------------------- //
-				// -------------------- EVAL AND ASSOCIATED METHODS -------------------- //
-				// --------------------------------------------------------------------- //
-
-				// TODO: Formating issues? Change over to a list based system
-				// This should take in an assignment object and then assign that object
-				// an eval value through the in class setter
-				// This does not actually have to return anything			  
-
-				public static void eval(Assignment a) {
-					ArrayList<Pair<Pair<Class, Slot>, Double>> preferences;
-					ArrayList<Pair<Class, Class>> pair;
-
-					int wMinFilled = 10;
-					int wPref = 10;
-					int wPair = 10;
-					int wSecDiff = 10;
-
-					if (star) {
-						ArrayList<Class> currentClasses = getCurrentClasses(assign, false);
-						preferences = new ArrayList<Pair<Pair<Class, Slot>, Double>>();
-						pair = new ArrayList<Pair<Class, Class>>();
-
-						// iterate through preferences
-						for (int i = 0; i < getPreferences().size(); i++) {
-							if (currentClasses.contains(getPreferences().get(i).getFirst().getFirst())) {
-								preferences.add(getPreferences().get(i));
-							}
-						}
-
-						// iterate through pair
-						for (int i = 0; i < getPair().size(); i++) {
-							if (currentClasses.contains(getPair().get(i).getFirst()) && currentClasses.contains(getPair().get(i).getSecond())) {
-								pair.add(getPair().get(i));
-							}
-						}
-
-						return pref(assign, preferences) * wPref + pair(assign, pair) * wPair + secDiff(assign) * wSecDiff;
-
-					}
-
-					return minFilled(assign) * wMinFilled + pref(assign, getPreferences()) * wPref + pair(assign, getPair()) * wPair + secDiff(assign) * wSecDiff;
-				}
-
-				// Check whether or not the slot has a minimum number of courses/labs in it
-				private static double minFilled(ArrayList<Pair<Slot, ArrayList<Class>>> assign) {
-					int value = assign.size() * 5;
-
-					// iterate through each slot
-					for (int i = 0; i < assign.size(); i++) {
-						if (assign.get(i).getSecond().size() < assign.get(i).getFirst().getMin())
-							// if size of array of classes is less than coursemin subtract from value
-							value = value - 5;
-					}
-
-					return value * 100 / assign.size();
-				}
-
-				// Check whether the courses/labs with slot preferences have been assigned to their respective slots
-				private static double pref(ArrayList<Pair<Slot, ArrayList<Class>>> assign, ArrayList<Pair<Pair<Class, Slot>, Double>> preferences) {
-					if (preferences.size() == 0) {
-						return 0;
-					}
-
-					double maxPenalty = 0;
-					double penalty = 0;
-
-					// iterate through preferences
-					for (int i = 0; i < preferences.size(); i++) {
-						maxPenalty = maxPenalty + preferences.get(i).getSecond();
-						// find slot in schedule
-						for (int j = 0; j < assign.size(); j++) {
-							// if the slots match and the class array does not contain the course in the preference
-							if (preferences.get(i).getFirst().getSecond().equals(assign.get(j).getFirst())) {
-								if (!assign.get(j).getSecond().contains(preferences.get(i).getFirst().getFirst())) {
-									penalty = penalty + preferences.get(i).getSecond();
-								}
-							}
-						}
-					}
-
-					return penalty / maxPenalty * 100;
-				}
-
-				// Check whether two courses have been scheduled at the same time as their paired course
-				private static double pair(ArrayList<Pair<Slot, ArrayList<Class>>> assign, ArrayList<Pair<Class, Class>> pair) {
-					if (pair.size() == 0) {
-						return 0;
-					}
-
-					int value = pair.size() * 5;
-					Slot first = new Slot();
-					Slot second = new Slot();
-
-					// iterate through the pairs
-					for (int i = 0; i < pair.size(); i++) {
-						// iterate through the schedule
-						for (int j = 0; j < assign.size(); j++) {
-							// get assignment for first class in pair
-							if (assign.get(j).getSecond().contains(pair.get(i).getFirst())) {
-								first = assign.get(j).getFirst();
-							}
-
-							// get assignment for second class in pair
-							if (assign.get(j).getSecond().contains(pair.get(i).getSecond())) {
-								second = assign.get(j).getFirst();
-							}
-						}
-
-						// if assignments don't equal each other apply penalty
-						if (!first.equals(second)) {
-							value = value - 5;
-						}
-					}
-
-					return value * 100 / pair.size();
-				}
-
-				private static double secDiff(ArrayList<Pair<Slot, ArrayList<Class>>> assign) {
-					int maxPenalty = 0;
-					int penalty = 0;
-
-					// iterate through the schedule
-					for (int i = 0; i < assign.size(); i++) {
-						// get only courses from class array
-						ArrayList<Integer> courseSections = new ArrayList<Integer>();
-						for (int j = 0; j < assign.get(i).getSecond().size(); j++) {
-							if (assign.get(i).getSecond().get(j).getType().equals("course")) {
-								courseSections.add(assign.get(i).getSecond().get(j).getId());
-							}
-						}
-
-						// determine max penalty for this slot
-						maxPenalty = maxPenalty + courseSections.size() * (courseSections.size() - 1) / 2;
-
-						if (maxPenalty == 0) {
-							return 0;
-						}
-
-						// create courseSection Hash and determine penalty from difference in size
-						HashSet<Integer> courseSectionHash = new HashSet<Integer>(courseSections);
-						penalty = penalty + (courseSections.size() - courseSectionHash.size()) * 5;
-					}
-
-					return penalty / maxPenalty * 100;
-				}
-
-				// ------------------------------------------------------------------- //
-				// -------------------- GETTER AND SETTER METHODS -------------------- //
-				// ------------------------------------------------------------------- //
-
-
-				public static ArrayList<Slot> getSlots() {
-					return slots;
-				}
-
-				public static void getSlots(ArrayList<Slot> slots) {
-					Scheduler.slots = slots;
-				}
-
-				private static ArrayList<Class> getClasses() {
-					return classes;
-				}
-
-				public static void setClasses(ArrayList<Class> classes) {
-					Scheduler.classes = classes;
-				}
-
-
-				private static ArrayList<Pair<Class, Class>> getNotCompatible() {
-					return notCompatible;
-				}
-
-				public static void setNotCompatible(ArrayList<Pair<Class, Class>> notCompatible) {
-					Scheduler.notCompatible = notCompatible;
-				}
-
-				private static ArrayList<Pair<Class, Slot>> getUnwanted() {
-					return unwanted;
-				}
-
-				public static void setUnwanted(ArrayList<Pair<Class, Slot>> unwanted) {
-					Scheduler.unwanted = unwanted;
-				}
-
-				private static ArrayList<Pair<Pair<Class, Slot>, Double>> getPreferences() {
-					return preferences;
-				}
-
-				public static void setPreferences(ArrayList<Pair<Pair<Class, Slot>, Double>> preferences) {
-					Scheduler.preferences = preferences;
-				}
-
-				public static ArrayList<Pair<Class, Class>> getPair() { return pair; }
-
-				public static void setPair(ArrayList<Pair<Class, Class>> pair) {
-					Scheduler.pair = pair;
-				}
-
-
-			}
-		}
