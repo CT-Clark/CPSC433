@@ -1,5 +1,10 @@
 package CPSC433master.scheduler.execution;
 
+// Authors: Stephen Booth, Marcel Baier, Cody Clark
+// This class contains the parser which accepts in a filepath as a commandline argument
+// This class also contains the search control, which decides which node to expanded
+// i.e. it decides which assignment to assign a new class onto
+
 // Custom objects
 import CPSC433master.scheduler.structures.Class;
 import CPSC433master.scheduler.structures.Course;
