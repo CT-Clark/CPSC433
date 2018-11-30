@@ -67,6 +67,14 @@ public class Slot implements Cloneable {
 				&& Integer.compare(max, s.max) == 0 && Integer.compare(min, s.min) == 0;
 	}
 
+	public String toString() {
+		String ret = "";
+		ret += this.day + " ";
+		ret += this.startTime.toString() + " ";
+
+		return ret;
+	}
+
 	public String getType() {
 		return type;
 	}
@@ -114,4 +122,5 @@ public class Slot implements Cloneable {
 	public void setMin(int min) {
 		this.min = min;
 	}
+
 }
