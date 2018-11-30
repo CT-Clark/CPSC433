@@ -30,13 +30,14 @@ public class Assignment {
 	private ArrayList<Pair<Class, Slot>> unwanted;
 	private ArrayList<Pair<Class, Class>> pairs;
 
-	int total_pen_coursemin = 0;
-	int total_pen_labsmin = 0;
-	int total_pen_notpaired = 0;
-	int total_pen_section = 0;
-	int total_pen_preferences = 0;
+	// Statistic for troubleshooping the evalue()
+	private int total_pen_coursemin = 0;
+	private int total_pen_labsmin = 0;
+	private int total_pen_notpaired = 0;
+	private int total_pen_section = 0;
+	private int total_pen_preferences = 0;
 	
-	// empty constructor for the root node
+	// Used to generate a blank canvas of an assignment with all of the fields initialized
 	public Assignment() {
 		this.assign = new ArrayList<>();
 
@@ -62,6 +63,7 @@ public class Assignment {
 		this.evalValue = 10000;
 	}
 	
+	// Used in the search control to create a new assignment based on an old assignment
 	public Assignment(ArrayList<Pair<Slot, ArrayList<Class>>> assign, ArrayList<Class> unassigned) {
 		this.assign = new ArrayList<>(assign);
 		this.unassignedClasses = new ArrayList<>(unassigned);
