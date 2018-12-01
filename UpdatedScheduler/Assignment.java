@@ -51,9 +51,9 @@ public class Assignment {
 	}
 
 	// Used in the search control to create a new assignment based on an old assignment
-	public Assignment(ArrayList<Pair<Slot, ArrayList<Class>>> assign, ArrayList<Class> unassigned) {
-		this.assign = assign;
-		this.unassignedClasses = new ArrayList<>(unassigned);
+	public Assignment(Assignment a) {
+		this.assign = a.getAssignCopy();
+		this.unassignedClasses = new ArrayList<>(a.getUnassignedClasses());
 
 		this.pairs = Scheduler.getPairs();
 		this.preferences = Scheduler.getPreferences();
@@ -68,9 +68,9 @@ public class Assignment {
 
 	public void evalue() {
 		double result = 0;
-		int pen_coursemin = 10;
-		int pen_labsmin = 10;
-		int pen_notpaired = 10;
+		int pen_coursemin = 100;
+		int pen_labsmin = 50;
+		int pen_notpaired = 20;
 		int pen_section = 10;
 
 
