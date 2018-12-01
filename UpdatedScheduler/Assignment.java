@@ -76,6 +76,56 @@ public class Assignment {
 
 		// Evaluate minCourse and minLab
 		for(Pair<Slot, ArrayList<Class>> p : assign) {
+			for(Class c : p.getSecond()) {
+
+				// Evaluate the penalty for Classes not being placed in their preferred slot
+				for (Pair<Pair<Class, Slot>, Double> prefs : preferences) {
+					if (prefs.getFirst().getFirst().equals(c) && !prefs.getFirst().getSecond().equals(p.getFirst())) {
+						result += prefs.getSecond();
+						total_pen_preferences += prefs.getSecond();
+						break;
+					}
+				}
+
+				// Evaluate the different sections in the same slot penalty
+				for(Class c2 : p.getSecond()) { // Compare with another class
+					if((!c.equals(c2))  // If they're the same object, don't compare them
+							&& (c.getDept().equals(c2.getDept())  // If they're in the same dept...
+							&& c.getType().equals(c2.getType())   // And they're the same type...
+							&& c.getId() == c2.getId())) {        // And they're for the same course...
+						result += pen_section;
+						total_pen_section += pen_section;
+					}
+				}
+
+				// Evalute the penalty for not being paired
+				for (Pair<Class, Class> pair : pairs) { // Iterate through all of the possible pairs
+
+					if(unassignedClasses.contains(pair.getFirst()) && unassignedClasses.contains(pair.getSecond())) {
+						break;
+					}
+
+					if (c.equals(pair.getFirst())) {
+						// Let's check if it hasn't been assigned yet
+						if (unassignedClasses.contains(pair.getSecond())) {
+							break;
+						}
+
+						// Go through all the classes assigned to a particular slot
+						if(p.getSecond().contains(pair.getSecond())) {
+							break;
+						}
+
+						// If a pair wasn't found, increase the penalty
+						// If the other side of the pair wasn't found, add a penalty
+						result += pen_notpaired;
+						total_pen_notpaired += pen_notpaired;
+					}
+
+				}
+			}
+
+			// Evaluate minCourse and minLab
 			int difference = p.getFirst().getMin() - p.getSecond().size();
 			if(difference > 0) {
 				if(p.getFirst().getType().equals("course")) {
@@ -85,87 +135,6 @@ public class Assignment {
 				if(p.getFirst().getType().equals("lab")) {
 					result += (difference * pen_labsmin);
 					total_pen_labsmin += (difference * pen_labsmin);
-				}
-			}
-		}
-
-		// Evaluate slot preferences
-		for(Pair<Pair<Class, Slot>, Double> p2 : preferences) {
-			for(Pair<Slot, ArrayList<Class>> p1 : assign) {
-				for(Class c : p1.getSecond()) {
-					if(p2.getFirst().getFirst().equals(c) && !p2.getFirst().getSecond().equals(p1.getFirst())) {
-						result += p2.getSecond();
-						total_pen_preferences += p2.getSecond();
-						break;
-					}
-				}
-			}
-		}
-
-		// Evaluate not paired penalty
-		for (Pair<Class, Class> p : pairs) { // Iterate through all of the possible pairs
-			boolean firstFound = false;
-			boolean secondFound = false;
-			boolean pairFound = false;
-			// Test if the pair has had at least one of its items assigned
-			for(Class uc : unassignedClasses) {
-				if(uc.equals(p.getFirst())) { firstFound = true; }
-				if(uc.equals(p.getSecond())) { secondFound = true; }
-				if(firstFound && secondFound) {
-					pairFound = true;
-					break;
-				} // True if neither item has been assigned yet
-			}
-
-			// At this point we know that at least one of the classes has been assigned
-			if(!pairFound) {
-				for (Pair<Slot, ArrayList<Class>> ap : assign) { // Go through all the slots
-					for (Class c : ap.getSecond()) { // Then all the courses in each slot
-						// If the first of the pair is present, check to see if the second is unassigned
-						if (c.equals(p.getFirst())) {
-							// Let's check if it hasn't been assigned yet
-							for (Class c2 : unassignedClasses) {
-								if (c2.equals(p.getSecond())) {
-									pairFound = true;
-									break;
-								}
-							}
-							if (pairFound) { break; }
-
-							// Go through all the classes assigned to a particular slot
-							for (Class cl : ap.getSecond()) {
-								// If there exists the other pair, break
-								if (cl.equals(p.getSecond())) {
-									pairFound = true;
-									break;
-								}
-							}
-							if (pairFound) { break; }
-						}
-					}
-				}
-
-			}
-			// If a pair wasn't found, increase the penalty
-			if(!pairFound) {
-				// If the other side of the pair wasn't found, add a penalty
-				result += pen_notpaired;
-				total_pen_notpaired += pen_notpaired;
-			}
-		}
-
-
-		// Evaluate the different sections in the same slot penalty
-		for(Pair<Slot, ArrayList<Class>> p : assign) { // For each slot
-			for(Class c1 : p.getSecond()) { // For each class
-				for(Class c2 : p.getSecond()) { // Compare with another class
-					if((!c1.equals(c2))  // If they're the same object, don't compare them
-							&& (c1.getDept().equals(c2.getDept())  // If they're in the same dept...
-							&& c1.getType().equals(c2.getType())   // And they're the same type...
-							&& c1.getId() == c2.getId())) {        // And they're for the same course...
-						result += pen_section;
-						total_pen_section += pen_section;
-					}
 				}
 			}
 		}
@@ -211,20 +180,14 @@ public class Assignment {
 	public ArrayList<Pair<Slot, ArrayList<Class>>> getAssignCopy() {
 		ArrayList<Pair<Slot, ArrayList<Class>>> result = new ArrayList<>(); // Create new assign object
 		// Initialize the new object with all of the slots
-		for (Slot s : Scheduler.getSlots()) {
-			Pair<Slot, ArrayList<Class>> p1 = new Pair<>(s, new ArrayList<>());
+		for (Pair<Slot, ArrayList<Class>> s : this.assign) {
+			Pair<Slot, ArrayList<Class>> p1 = new Pair<>(s.getFirst(), new ArrayList<>());
 			// Then for all of the new slots, copy the class objects
-			for(Pair<Slot, ArrayList<Class>> p2 : this.assign) {
-				if(p2.getFirst().equals(s)) {
-					for(Class c : p2.getSecond()) {
-						p1.getSecond().add(c);
-					}
-				}
+			for(Class c : s.getSecond()) {
+				p1.getSecond().add(c);
 			}
-
 			result.add(p1);
 		}
-
 		return result;
 	}
 	
@@ -247,7 +210,7 @@ public class Assignment {
 	}
 
 	public ArrayList<Class> getUnassignedClasses() {
-		return new ArrayList<>(unassignedClasses); }
+		return unassignedClasses; }
 
 	public int getSizeOfUnassignedClasses() { return unassignedClasses.size(); }
 
