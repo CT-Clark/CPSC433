@@ -70,6 +70,7 @@ public class Scheduler {
 		}
 		*/
 
+
 		while(!foundResult) {
 
 			// If there are no more nodes to expand and a solution hasn't been found, then there isn't one
@@ -78,18 +79,28 @@ public class Scheduler {
 				break;
 			}
 			run++;
-
 			Assignment result = new Assignment();
+
 			// Find the assignment with the lowest eval score
 			for(Assignment a : assignList) {
 				if (a.getEvalValue() <= result.getEvalValue()) {
 					result = a;
+				} else if (a.getEvalValue() == result.getEvalValue()) {
+					if(a.getUnassignedClasses().size() <= result.getUnassignedClasses().size() ) {
+						result = a;
+					}
 				}
 			}
 
+			assignList.remove(result);
+			assignList.trimToSize();
+
 			// Uncomment if you would like to see progress for long runs
-			if((run % 100) == 0) { System.out.println("RUN: " + run);
-			System.out.println(result); }
+			if((run % 20) == 0) { System.out.println("RUN: " + run);
+			System.out.println(result);
+			System.out.println("Number of courses left to assign: " + result.getUnassignedClasses().size());
+			result.printTotalPens();
+			System.out.println("Size of assignList: " + assignList.size());}
 
 			//System.out.println("Num of Assigns in assignList: " + assignList.size());
 
@@ -118,6 +129,7 @@ public class Scheduler {
 							// Works correctly
 							if(p.getSecond().size() < p.getFirst().getMax()) {
 
+								//
 								if (c.getId() == 813 || c.getId() == 913) {
 									// Make sure that 813 and 913 are on Tuesday
 									if (!p.getFirst().getDay().equals("TU")) {
@@ -191,13 +203,32 @@ public class Scheduler {
 															&& conSlot.getFirst().getStartTime().isBefore(p.getFirst().getEndTime()))
 															|| (p.getFirst().getStartTime().isAfter(conSlot.getFirst().getStartTime())
 															&& p.getFirst().getStartTime().isBefore(conSlot.getFirst().getEndTime()))) {
+
 														// Tutorials and Courses for the same LEC number cannot go together
 														for(Class conClass : conSlot.getSecond()) {
 															if(conClass.getDept().equals(c.getDept())
 																	&& conClass.getId() == c.getId()
-																	&& conClass.getLecture() == c.getLecture()
-																	&& !conClass.equals(c)) {
+																	&& (conClass.getLecture() == c.getLecture() // If the lecture number is the same
+																	|| c.getLecture() == -1             // Or if it's supposed to be open to everyone no matter the lecture
+																	|| conClass.getLecture() == -1)
+																	&& !conClass.equals(c)) { // Don't compare the same classes
 																conflictFound = true;
+																//System.out.println("Courses and their respective tutorials cannot be assigned at the same times");
+																break;
+															}
+
+															// CPSC 313, 413, 813, and 913 requirements
+															if(conClass.getDept().equals("CPSC") && c.getDept().equals("CPSC")
+																	&& ((conClass.getId() == 813
+																	&& c.getId() == 313)
+																	|| (conClass.getId() == 313
+																	&& c.getId() == 813))
+																	|| ((conClass.getId() == 913
+																	&& c.getId() == 413)
+																	|| (conClass.getId() == 413
+																	&& c.getId() == 913))) {
+																conflictFound = true;
+																System.out.println("CPSC 313/413/813/913 conflict");
 																break;
 															}
 														}
@@ -233,24 +264,16 @@ public class Scheduler {
 											if(conflictFound) { continue; }
 
 											// Create a new node
-											Assignment a = new Assignment(result.getAssignCopy(), result.getUnassignedClasses());
+											Assignment a = new Assignment(result);
+
 											a.assignClass(p.getFirst(), c);
 											//System.out.println(a);
 
 
-												a.evalue(); // Update assignment evalValue
-												//a.printTotalPens();
-												assignList.add(a);
-												//System.out.println("TESTING");
-												//System.out.println(a + "\n");
-												//for(Class ctest : a.getUnassignedClasses()) {
-												//	System.out.println(ctest);
+											a.evalue(); // Update assignment evalValue
+											//a.printTotalPens();
+											assignList.add(a);
 
-												if(assignList.size() > 350000 && assignList.size() % 10 == 0) {
-													System.out.println(assignList.size());
-													System.out.println(a);
-													System.out.println("Number of unassigned courses left: " + a.getUnassignedClasses().size());
-												}
 											}
 										} //else { System.out.println("Evening course not in the evening");
 										//System.out.println("Course: " + c + " Slot: " + p.getFirst());}
@@ -262,11 +285,10 @@ public class Scheduler {
 						} //else { System.out.println("Wrong type");
 							//System.out.println("Course: " + c + " Slot: " + p.getFirst()); }
 					}
+
 				}
 			assignList.remove(result);
-			result = null;
 			}
-
 	}
 
 
