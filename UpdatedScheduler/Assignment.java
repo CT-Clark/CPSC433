@@ -20,10 +20,10 @@ import CPSC433master.scheduler.execution.Scheduler;
 
 public class Assignment {
 
-	private double evalValue = 10000;
+	private double evalValue = 1000000;
 	
-	private ArrayList<Pair<Slot, ArrayList<Class>>> assign;
-	private ArrayList<Class> unassignedClasses;
+	private ArrayList<Pair<Slot, HashSet<Class>>> assign;
+	private HashSet<Class> unassignedClasses;
 	private ArrayList<Pair<Pair<Class, Slot>, Double>> preferences;
 	private ArrayList<Pair<Class, Class>> pairs;
 
@@ -40,11 +40,11 @@ public class Assignment {
 		// add each slot to the assignment with a blank arrayList of classes
 
 		for (Slot s : Scheduler.getSlots()) {
-			Pair<Slot, ArrayList<Class>> p = new Pair<>(s, new ArrayList<>());
+			Pair<Slot, HashSet<Class>> p = new Pair<>(s, new HashSet<>());
 			this.assign.add(p);
 		}
 
-		this.unassignedClasses = new ArrayList<>(Scheduler.getClasses());
+		this.unassignedClasses = new HashSet<>(Scheduler.getClasses());
 		this.pairs = Scheduler.getPairs();
 		this.preferences = Scheduler.getPreferences();
 
@@ -53,7 +53,7 @@ public class Assignment {
 	// Used in the search control to create a new assignment based on an old assignment
 	public Assignment(Assignment a) {
 		this.assign = a.getAssignCopy();
-		this.unassignedClasses = new ArrayList<>(a.getUnassignedClasses());
+		this.unassignedClasses = new HashSet<>(a.getUnassignedClasses());
 
 		this.pairs = Scheduler.getPairs();
 		this.preferences = Scheduler.getPreferences();
@@ -68,14 +68,13 @@ public class Assignment {
 
 	public void evalue() {
 		double result = 0;
-		int pen_coursemin = 100;
-		int pen_labsmin = 50;
-		int pen_notpaired = 20;
-		int pen_section = 10;
-
+		int pen_coursemin = 10;
+		int pen_labsmin = 0;
+		int pen_notpaired = 2;
+		int pen_section = 1;
 
 		// Evaluate minCourse and minLab
-		for(Pair<Slot, ArrayList<Class>> p : assign) {
+		for(Pair<Slot, HashSet<Class>> p : assign) {
 			for(Class c : p.getSecond()) {
 
 				// Evaluate the penalty for Classes not being placed in their preferred slot
@@ -155,7 +154,7 @@ public class Assignment {
 	public String toString() {
 		String returnStr = "\n||--------------------||--------------------||\n\nEval value: " + this.getEvalValue() + "\n";
 		
-		for (Pair<Slot, ArrayList<Class>> p : assign) {
+		for (Pair<Slot, HashSet<Class>> p : assign) {
 			String slotStr = p.getFirst().getDay() + " " + p.getFirst().getStartTime().toString() + "\t";
 			String classStr;
 			
@@ -170,18 +169,33 @@ public class Assignment {
 		
 	}
 
+	// Tests whether one assignment equals another
+	public boolean equals(Assignment a) {
+		for(Pair<Slot, HashSet<Class>> p1 : a.getAssign()) {
+			for(Pair<Slot, HashSet<Class>> p2 : assign) {
+				if(p1.getFirst().equals(p2.getFirst())) {
+					if(!p1.getSecond().equals(p2.getSecond())) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
 	// ----- GETTER AND SETTER METHODS ----- //
 
-	public ArrayList<Pair<Slot, ArrayList<Class>>> getAssign() {
+	public ArrayList<Pair<Slot, HashSet<Class>>> getAssign() {
 		return assign;
 	}
 
 	// Method to return the current assignment to be copied
-	public ArrayList<Pair<Slot, ArrayList<Class>>> getAssignCopy() {
-		ArrayList<Pair<Slot, ArrayList<Class>>> result = new ArrayList<>(); // Create new assign object
+	public ArrayList<Pair<Slot, HashSet<Class>>> getAssignCopy() {
+		ArrayList<Pair<Slot, HashSet<Class>>> result = new ArrayList<>(); // Create new assign object
 		// Initialize the new object with all of the slots
-		for (Pair<Slot, ArrayList<Class>> s : this.assign) {
-			Pair<Slot, ArrayList<Class>> p1 = new Pair<>(s.getFirst(), new ArrayList<>());
+		for (Pair<Slot, HashSet<Class>> s : this.assign) {
+			Pair<Slot, HashSet<Class>> p1 = new Pair<>(s.getFirst(), new HashSet<>());
 			// Then for all of the new slots, copy the class objects
 			for(Class c : s.getSecond()) {
 				p1.getSecond().add(c);
@@ -191,7 +205,7 @@ public class Assignment {
 		return result;
 	}
 	
-	public void setAssign(ArrayList<Pair<Slot, ArrayList<Class>>> assign) {
+	public void setAssign(ArrayList<Pair<Slot, HashSet<Class>>> assign) {
 		this.assign = new ArrayList<>(assign);
 	}
 
@@ -200,7 +214,7 @@ public class Assignment {
 	public void setEvalValue(double value) { this.evalValue = value; }
 
 	public void assignClass(Slot s, Class c) {
-		for(Pair<Slot, ArrayList<Class>> p : assign) {
+		for(Pair<Slot, HashSet<Class>> p : assign) {
 			if(p.getFirst().equals(s)) {
 				p.getSecond().add(c);
 				break;
@@ -209,7 +223,7 @@ public class Assignment {
 		unassignedClasses.remove(c);
 	}
 
-	public ArrayList<Class> getUnassignedClasses() {
+	public HashSet<Class> getUnassignedClasses() {
 		return unassignedClasses; }
 
 	public int getSizeOfUnassignedClasses() { return unassignedClasses.size(); }
