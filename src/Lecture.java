@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -9,9 +10,16 @@ public abstract class Lecture {
     protected List<Slot> preferedSlots;
     protected int preferenceScore;
     protected int constraintCount;
+    protected List<Slot> unwanted;
+    protected List<Lecture> not_compatible;
+    protected List<Lecture> pair;
+
 
     public Lecture(String department, int number, int section) {
         preferedSlots = new ArrayList<>();
+        unwanted = new ArrayList<>();
+        pair = new ArrayList<>();
+        not_compatible = new ArrayList<>();
         if(department.length() != 4) {
             throw new IllegalArgumentException("Department acronym must have always four letters!");
         }
@@ -19,6 +27,8 @@ public abstract class Lecture {
         this.number = number;
         this.section = section;
     }
+
+    public abstract boolean sameSection(Lecture lec);
 
     public void incrementConstraints() {
         constraintCount++;
@@ -90,6 +100,35 @@ public abstract class Lecture {
         } else {
             return Course.produceCourse(representation);
         }
+    }
+
+    public boolean sameModule(Lecture lec) {
+        if(department.equals(lec.department) && number == lec.number) {
+            return true;
+        }
+        return false;
+    }
+
+    public void addUnwanted(Slot forbiddenSlot) {
+        unwanted.add(forbiddenSlot);
+        constraintCount++;
+    }
+
+    public  List<Slot> getUnwanted() {
+        return unwanted;
+    }
+
+    public void addNotCompatible(Lecture lec) {
+        not_compatible.add(lec);
+        constraintCount++;
+    }
+
+    public void addPair(Lecture lec) {
+        pair.add(lec);
+    }
+
+    public String getId() {
+        return "";
     }
 
     // TODO: Getter and setter methods for the sets of eval attributes

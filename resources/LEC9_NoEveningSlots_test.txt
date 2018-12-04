@@ -1,0 +1,23 @@
+Name:
+MinimalTest
+
+Course slots:
+MO, 8:00, 2, 0
+
+Lab slots:
+
+Courses:
+CPSC 100 LEC 01
+CPSC 100 LEC 91
+
+Labs:
+
+Not compatible:
+
+Unwanted:
+
+Preferences:
+
+Pair:
+
+Partial assignments:

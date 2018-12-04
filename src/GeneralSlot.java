@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 // Static knowledge about each slot
 public class GeneralSlot extends Slot {
@@ -14,7 +11,7 @@ public class GeneralSlot extends Slot {
     private boolean type;
     private List<Lecture> unwanted;
     private HashMap<Lecture, Integer> preferences;
-    private VirtualSlot vSlot;
+    //private VirtualSlot vSlot;
     private List<Slot> overlappingSlots;
 
     public GeneralSlot(String slotDatum, int parseInt, boolean type) {
@@ -22,7 +19,8 @@ public class GeneralSlot extends Slot {
         preferences = new LinkedHashMap<>();
         this.day = Day.valueOf(slotDatum);
         this.type = type;
-        vSlot = new VirtualSlot(this);
+        overlappingSlots = new ArrayList<>();
+        //vSlot = new VirtualSlot(this);
 
         startTime = parseInt;
 
@@ -60,7 +58,7 @@ public class GeneralSlot extends Slot {
         max = slot.max;
         duration = slot.duration;
         type = slot.type;
-        vSlot = new VirtualSlot(slot.vSlot, this);
+        //vSlot = new VirtualSlot(slot.vSlot, this);
         unwanted = slot.unwanted;
         preferences = slot.preferences;
 
@@ -120,7 +118,8 @@ public class GeneralSlot extends Slot {
         if((day == Day.MO && slot.getDay() == Day.FR) || day == slot.getDay()) {
             if ((slot.getStartTime() <= startTime && (slot.getStartTime() + slot.getDuration()) > startTime) ||
                     (startTime + duration > slot.getStartTime() && startTime <= slot.getStartTime())) {
-                vSlot.addOverlapping(slot);
+                //vSlot.addOverlapping(slot);
+                overlappingSlots.add(slot);
             }
         }
     }
@@ -134,17 +133,33 @@ public class GeneralSlot extends Slot {
     }
 
     public List<Slot> getOverlappingSlots() {
-        return vSlot.getOverlapping();
+        return overlappingSlots;
+        //vSlot.getOverlapping();
     }
 
     @Override
-    public boolean checkHardConstraints(Lecture lec, List<Slot> courseSlots, List<Slot> labSlots) {
+    public boolean checkHardConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots) {
         return true;
     }
 
-    @Override
+    /*@Override
     public List<Pair> getNotPaired() {
         return vSlot.getNotPaired();
+    }
+
+    @Override
+    public List<Pair> getPaired() {
+        return vSlot.getPairs();
+    }*/
+
+    @Override
+    public boolean overlappingLectureSections(Lecture lec) {
+        return false;
+    }
+
+    @Override
+    public int evaluateSoftConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots, Collection<Lecture> unassignedLectures) {
+        return 0;
     }
 
     @Override
@@ -192,8 +207,19 @@ public class GeneralSlot extends Slot {
     }
 
     @Override
+    public String getId() {
+        String time = String.valueOf(startTime);
+        if(time.length() == 4) {
+            return day.name() + ", " + time.substring(0,2) + ":" + time.substring(2);
+        } else {
+            return day.name() + ", " + time.substring(0,1) + ":" + time.substring(1);
+        }
+    }
+
+    @Override
     public void saveUnwantedLecture(Lecture lec1) {
         unwanted.add(lec1);
+        lec1.constraintCount++;
     }
 
 }

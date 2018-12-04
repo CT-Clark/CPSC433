@@ -8,6 +8,13 @@ public class Pair {
         System.out.print(toString());
     }
 
+    public boolean contains(Lecture lec) {
+        if(a.equals(lec) || b.equals(lec)) {
+            return true;
+        }
+        return false;
+    }
+
     public String toString() {
         return "NOT_COMPATIBLE: (" + a + ",\t" + b + ")";
     }

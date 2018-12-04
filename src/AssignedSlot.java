@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class AssignedSlot extends Slot {
     private List<Lecture> assigned;
@@ -8,7 +6,11 @@ public class AssignedSlot extends Slot {
     private int evalScore;
 
     public AssignedSlot(Slot slot, Lecture lec) {
-        this.slot = slot;
+        if(slot instanceof AssignedSlot) {
+            this.slot = ((AssignedSlot)slot).slot;
+        } else {
+            this.slot = slot;
+        }
         this.evalScore = slot.getEvalScore();
         this.assigned = new ArrayList<>();
 
@@ -16,22 +18,152 @@ public class AssignedSlot extends Slot {
         assigned.add(lec);
     }
 
-    public boolean checkHardConstraints(Lecture lec, List<Slot> courseSlots, List<Slot> labSlots) {
-        //TODO: Course and Lab not at the same time
-        //Unwanted check
-        if(slot.getUnwanted().contains(lec)){
-            return false;
+    public boolean overlappingLectureSections(Lecture lec) {
+        for(Lecture assignedLec : assigned) {
+            if (assignedLec.sameSection(lec) && !lec.equals(assignedLec)) {
+                return true;
+            }
         }
+        return false;
+    }
 
+    public boolean overlappingLectures(Lecture lec) {
+
+        for(Lecture assignedLec : assigned) {
+            if (assignedLec.sameModule(lec) && !lec.equals(assignedLec)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean overlappingLevel(Lecture lec) {
+
+        for(Lecture assignedLec : assigned) {
+            if(assignedLec.getDepartment().equals(lec.department) && assignedLec.number >= 500 && assignedLec.number < 600){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public boolean checkHardConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots) {
         //Maximum
         if(assigned.size() > slot.getMax()) {
             return false;
         }
 
+        //Unwanted check
+        if(lec.getUnwanted().contains(this)){
+            return false;
+        }
+        /*if(slot.getUnwanted().contains(lec)){
+            return false;
+        }*/
+
+        //Lab and Courses of one Section should not overlap
+        /*if(overlappingLectureSections(lec)) {
+            return false;
+        }*/
+
+        /*if(lec.department.equals("CPSC") && lec.number >= 500 && lec.number < 600) {
+        if(overlappingLevel(lec)) {
+            return false;
+        }
+        }*/
+
+        for(Slot overlappingSlot : slot.getOverlappingSlots()) {
+            if(overlappingSlot.overlappingLectureSections(lec)){
+                return false;
+            }
+        }
+
         //Not-Compatible
         List<Slot> overlaps = new ArrayList<>();
         for(Slot slot : slot.getOverlappingSlots()){
-            overlaps.add(courseSlots.indexOf(slot) == -1 ? labSlots.get(labSlots.indexOf(slot)) : courseSlots.get(courseSlots.indexOf(slot)));
+            if(courseSlots.contains(slot)) {
+                Iterator<Slot> cSlotIt = courseSlots.iterator();
+                while(cSlotIt.hasNext()) {
+                    Slot cPos = cSlotIt.next();
+                    if(cPos.equals(slot)) {
+                        overlaps.add(cPos);
+                    }
+                }
+            } else {
+                Iterator<Slot> lSlotIt = labSlots.iterator();
+                while(lSlotIt.hasNext()) {
+                    Slot lPos = lSlotIt.next();
+                    if(lPos.equals(slot)) {
+                        overlaps.add(lPos);
+                    }
+                }
+            }
+        }
+
+        List<Lecture> lectures = new ArrayList<>();
+        for(Slot slot : overlaps) {
+            lectures.addAll(slot.getAssignedLectures());
+        }
+        lectures.addAll(assigned);
+
+
+        for(Lecture lecture : lectures) {
+            if(lec.not_compatible.contains(lecture) && !lec.equals(lecture)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*@Override
+    public List<Pair> getNotPaired() {
+        return slot.getNotPaired();
+    }*/
+
+    /*@Override
+    public List<Pair> getPaired() {
+        return slot.getPaired();
+    }*/
+
+    public int evaluateSoftConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots, Collection<Lecture> unasssignedLectures) {
+        //Check preferences
+        if(lec.preferedSlots.indexOf(this) == -1) {
+            evalScore += lec.preferenceScore;
+        }
+
+        //Check if different sections overlap
+        if(lec.department.equals("CPSC")){
+        if(overlappingLectures(lec)) {
+            evalScore += Project.pen_section;
+        }}
+
+        for(Slot overlappingSlot : slot.getOverlappingSlots()) {
+            if(overlappingSlot.overlappingLectureSections(lec)){
+                evalScore += Project.pen_section;
+            }
+        }
+
+        //Unwanted
+        List<Slot> overlaps = new ArrayList<>();
+        for(Slot slot : slot.getOverlappingSlots()){
+            if(courseSlots.contains(slot)) {
+                Iterator<Slot> cSlotIt = courseSlots.iterator();
+                while(cSlotIt.hasNext()) {
+                    Slot cPos = cSlotIt.next();
+                    if(cPos.equals(slot)) {
+                        overlaps.add(cPos);
+                    }
+                }
+            } else {
+                Iterator<Slot> lSlotIt = labSlots.iterator();
+                while(lSlotIt.hasNext()) {
+                    Slot lPos = lSlotIt.next();
+                    if(lPos.equals(slot)) {
+                        overlaps.add(lPos);
+                    }
+                }
+            }
         }
 
         List<Lecture> lectures = new ArrayList<>();
@@ -39,28 +171,16 @@ public class AssignedSlot extends Slot {
             lectures.addAll(slot.getAssignedLectures());
         }
 
-        for(Lecture lecture : lectures) {
-            Pair newPair = new Pair(lec, lecture);
-            if(slot.getNotPaired().contains(newPair)) {
-            return false;
+
+        for(Lecture lecture : lec.pair) {
+            //Already assigned
+            if(!unasssignedLectures.contains(lecture)) {
+                //But not in this slot
+                if(!lectures.contains(lecture)) {
+                    evalScore += Project.pen_notpaired;
+                }
             }
         }
-        return true;
-    }
-
-    @Override
-    public List<Pair> getNotPaired() {
-        return slot.getNotPaired();
-    }
-
-    public int evaluateSoftConstraints(Lecture lec) {
-        //Check preferences
-        if(lec.preferedSlots.indexOf(this) == -1) {
-            evalScore += lec.preferenceScore;
-        }
-        //TODO: Slot minimum
-        //TODO: Course Section and Lab Section not on same time
-        //TODO: paired check
         return evalScore;
     }
 
@@ -122,6 +242,11 @@ public class AssignedSlot extends Slot {
     }
 
     @Override
+    public String getId() {
+        return slot.getId();
+    }
+
+    @Override
     public void saveUnwantedLecture(Lecture lec1) {
         slot.saveUnwantedLecture(lec1);
     }
@@ -134,6 +259,11 @@ public class AssignedSlot extends Slot {
     @Override
     public List<Slot> getOverlappingSlots() {
         return slot.getOverlappingSlots();
+    }
+
+    @Override
+    public String toString() {
+        return slot.toString();
     }
 }
 

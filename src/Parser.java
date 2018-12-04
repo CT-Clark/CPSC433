@@ -4,17 +4,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
 public class Parser {
     private String path;
-    private List<Lecture> coursesList;
-    private List<Lecture> labsList;
-    private List<Slot> courseSlots;
-    private List<Slot> labSlots;
-    private List<Pair> pairs;
-    private List<Pair> not_compatible;
+    private HashMap<String, Lecture> courseMap;
+    private HashMap<String, Lecture> labsMap;
+    private HashMap<String, Slot> courseSlots;
+    private HashMap<String, Slot> labSlots;
+    private Assignment s0;
+    //private List<Pair> pairs;
+    //private List<Pair> not_compatible;
 
     public Parser(String path) {
         this.path = path;
@@ -77,31 +79,46 @@ public class Parser {
                 }
                 counter++;
             }
-            savePartialAssignments(inputFile, lastBreakpoint, counter - 1);
+            s0 = savePartialAssignments(inputFile, lastBreakpoint, counter);
         }
         List<Lecture> lectures = new ArrayList<>();
-        lectures.addAll(coursesList);
-        lectures.addAll(labsList);
-        return new SearchControl(lectures, courseSlots, labSlots, not_compatible, pairs);
+        lectures.addAll(courseMap.values());
+        lectures.addAll(labsMap.values());
+        return new SearchControl(lectures, courseSlots, labSlots, s0);
     }
 
-    private void savePartialAssignments(List<String> inputFile, int lastBreakpoint, int i) {
+    private Assignment savePartialAssignments(List<String> inputFile, int lastBreakpoint, int i) {
         //TODO: save partial assignment as start state
+        Assignment partialAssign = new Assignment(courseSlots.values(), labSlots.values());
         for (String line : inputFile.subList(lastBreakpoint, i)) {
             if (line.isEmpty()) {
                 continue;
             }
 
-            String[] lectures = line.split(", ");
+            String[] lectures = line.split(", ", 2);
             if(lectures.length != 2) {
                 throw new IllegalStateException();
             }
 
+            Lecture lec1 = labsMap.get(lectures[0].trim());
+            Slot slot = labSlots.get(lectures[1].replace(" ", "").replace(":", "").trim() + "," + !GeneralSlot.COURSE);
+            if(lec1 == null) {
+                lec1 = courseMap.get(lectures[0].trim());
+                String id = lectures[1].replace(" ", "").replace(":", "").trim() + "," + GeneralSlot.COURSE;
+                slot = courseSlots.get(id);
+            }
+
+            partialAssign = partialAssign.assignLecture(lec1, slot);
+            partialAssign.unassignedLectures.add(lec1);
+            if(partialAssign == null) {
+                throw new IllegalArgumentException("Partial assignments break hard constraints!");
+            }
         }
+        return partialAssign;
     }
 
     private void savePairs(List<String> inputFile, int lastBreakpoint, int counter) {
-        pairs = savePairedLectures(inputFile, lastBreakpoint, counter);
+        savePairedLectures(inputFile, lastBreakpoint, counter, true);
     }
 
     private void savePreferences(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -109,21 +126,35 @@ public class Parser {
             if(line.isEmpty()) {
                 continue;
             }
-            String[] preference = line.split(",");
+            String[] preference = line.split(",", 4);
 
-            Lecture lec1 = Lecture.produceLecture(preference[2]);
+            Lecture lec1 = labsMap.get(preference[2].trim());
+            Slot slot = labSlots.get((preference[0] + "," + preference[1].trim().replace(":", "")).trim() + "," + !GeneralSlot.COURSE);
+            if(lec1 == null) {
+                String id = (preference[0] + "," + preference[1].trim().replace(":", "")).trim() + "," + GeneralSlot.COURSE;
+                lec1 = courseMap.get(preference[2].trim());
+                slot = courseSlots.get(id);
+            }
+            if(lec1 != null && slot != null){
+            lec1.preferedSlots.add(slot);
+            lec1.preferenceScore = Integer.valueOf(preference[3].trim());
+            }  else {
+                System.err.println("Preferences list links to not existing slot or course:\n" + line);
+            }
+
+            /*Lecture lec1 = Lecture.produceLecture(preference[2]);
             Slot slot = GeneralSlot.produceSlot(preference[0] + ", " + preference[1], lec1 instanceof Lab ? !GeneralSlot.COURSE : GeneralSlot.COURSE);
 
             if (lec1 instanceof Lab) {
-                Lecture lab = labsList.get(labsList.indexOf(lec1));
+                Lecture lab = labsMap.get(labsMap.indexOf(lec1));
                 lab.preferedSlots.add(labSlots.get(labSlots.indexOf(slot)));
                 lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
 
             } else {
-                Lecture lab = coursesList.get(coursesList.indexOf(lec1));
+                Lecture lab = courseMap.get(courseMap.indexOf(lec1));
                 lab.preferedSlots.add(courseSlots.get(courseSlots.indexOf(slot)));
                 lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
-            }
+            }*/
         }
     }
 
@@ -133,24 +164,27 @@ public class Parser {
                 continue;
             }
             String[] unwanted = line.split(",", 2);
-            Lecture lec1 = Lecture.produceLecture(unwanted[0]);
 
-            Slot slot = GeneralSlot.produceSlot(unwanted[1], lec1 instanceof Lab ? !GeneralSlot.COURSE : GeneralSlot.COURSE);
-            if(slot.getType() == GeneralSlot.COURSE) {
-                courseSlots.get(courseSlots.indexOf(slot)).saveUnwantedLecture(lec1);
-            } else {
-                courseSlots.get(courseSlots.indexOf(slot)).saveUnwantedLecture(lec1);
+            Lecture lec1 = labsMap.get(unwanted[0].trim());
+            Slot slot = labSlots.get(unwanted[1].trim().replace(" ", "").replace(":", "") + "," + !GeneralSlot.COURSE);
+            if(lec1 == null) {
+                lec1 = courseMap.get(unwanted[0].trim());
+                slot = courseSlots.get(unwanted[1].trim().replace(" ", "").replace(":", "") + "," + GeneralSlot.COURSE);
             }
+
+            lec1.addUnwanted(slot);
         }
     }
 
     private void saveNotCompatible(List<String> inputFile, int lastBreakpoint, int counter) {
-        not_compatible = savePairedLectures(inputFile, lastBreakpoint, counter);
+        //not_compatible = savePairedLectures(inputFile, lastBreakpoint, counter);
+        savePairedLectures(inputFile, lastBreakpoint, counter, false);
     }
 
-    private List<Pair> savePairedLectures(List<String> inputFile, int lastBreakpoint, int counter) {
+    private List<Pair> savePairedLectures(List<String> inputFile, int lastBreakpoint, int counter, boolean pair) {
         List<Pair> couples = new ArrayList<>(counter - lastBreakpoint + 1);
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
+            line = line.replaceAll(" +", " ");
             if(line.isEmpty()) {
                 continue;
             }
@@ -158,41 +192,67 @@ public class Parser {
             if(notCompatiblePair.length != 2) {
                 throw new IllegalStateException();
             }
+
+            Lecture lec1 = labsMap.get(notCompatiblePair[0].trim());
+            if(lec1 == null) {
+                lec1 = courseMap.get(notCompatiblePair[0].trim());
+            }
+
+            Lecture lec2 = labsMap.get(notCompatiblePair[1].trim());
+            if(lec2 == null) {
+                lec2 = courseMap.get(notCompatiblePair[1].trim());
+            }
+
+            if(pair) {
+                lec1.addPair(lec2);
+                lec2.addPair(lec1);
+            } else {
+                lec1.addNotCompatible(lec2);
+                lec2.addNotCompatible(lec1);
+            }
+
+
+
+            //couples.add(new Pair(lec1, lec2));
             //To be aware: This produces redundant Lecture courses!
-            Lecture lec1 = Lecture.produceLecture(notCompatiblePair[0]);
+            /*Lecture lec1 = Lecture.produceLecture(notCompatiblePair[0]);
             Lecture lec2 = Lecture.produceLecture(notCompatiblePair[1]);
 
 
-            Lecture originalLec = coursesList.indexOf(lec1) == -1 ?
-                    labsList.get(
-                            labsList.indexOf(lec1)) :
-                    coursesList.get(
-                            coursesList.indexOf(lec1));
-            Lecture originalLec2 = coursesList.indexOf(lec2) == -1 ? labsList.get(labsList.indexOf(lec2)) : coursesList.get(coursesList.indexOf(lec2));
+            Lecture originalLec = courseMap.indexOf(lec1) == -1 ?
+                    labsMap.get(
+                            labsMap.indexOf(lec1)) :
+                    courseMap.get(
+                            courseMap.indexOf(lec1));
+            Lecture originalLec2 = courseMap.indexOf(lec2) == -1 ? labsMap.get(labsMap.indexOf(lec2)) : courseMap.get(courseMap.indexOf(lec2));
 
-            couples.add(new Pair(originalLec, originalLec2));
+            couples.add(new Pair(originalLec, originalLec2));*/
         }
         return couples;
     }
 
     private void saveLabs(List<String> inputFile, int lastBreakpoint, int counter) {
-        labsList = new ArrayList<>(inputFile.size());
+        labsMap = new HashMap<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
+            line = line.trim();
+            line = line.replaceAll(" +", " ");
             if (line.isEmpty()) {
                 continue;
             }
-
-            labsList.add(Lab.produceLab(line));
+            labsMap.put(line, Lab.produceLab(line));
         }
     }
 
     private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
-        coursesList = new ArrayList<>(inputFile.size());
+        //courseMap = new ArrayList<>(inputFile.size());
+        courseMap = new HashMap<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
+            line = line.trim();
+            line = line.replaceAll(" +", " ");
             if (line.isEmpty()) {
                 continue;
             }
-            coursesList.add(Course.produceCourse(line));
+            courseMap.put(line, Course.produceCourse(line));
         }
     }
 
@@ -204,16 +264,21 @@ public class Parser {
         courseSlots = saveSlots(inputFile, lastBreakpoint, counter, GeneralSlot.COURSE);
     }
 
-    private List<Slot> saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
-        List<Slot> slotList = new ArrayList<>(inputFile.size());
+    private HashMap<String, Slot> saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
+        HashMap<String, Slot> slotMap = new HashMap<>(inputFile.size());
+
+        //List<Slot> slotList = new ArrayList<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.replaceAll("\\s", "");
+            line = line.trim();
             if (line.isEmpty()) {
                 continue;
             }
-            slotList.add(GeneralSlot.produceSlot(line, type));
+            Slot newSlot = GeneralSlot.produceSlot(line, type);
+            slotMap.put(newSlot.getDay() + "," + newSlot.getStartTime() + "," + type, newSlot);
+            //slotList.add();
         }
-        return slotList;
+        return slotMap;
     }
 
     private void saveName(List<String> inputFile, int lastBreakpoint, int counter) {
