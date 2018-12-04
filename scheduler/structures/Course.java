@@ -1,10 +1,12 @@
 package structures;
 
+// This class specifically defines a course object, which is a version of the class superclass object
+// This is specifically for "lectures"
 
 public class Course extends Class {
 	
-	public Course(String dept, int id, int lecture) {
-		super(dept, id, lecture);
+	public Course(String dept, int id, int lecture, int rank) {
+		super(dept, id, lecture, rank);
 	}
 	
 	public Course(Course course) {

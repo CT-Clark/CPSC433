@@ -1,11 +1,14 @@
 package structures;
 
+// This class defines the lab object, which is a version of the Class superclass object
+// This defines all fields and methods for working specifically with "lab" or "tut" input
+
 public class Lab extends Class {
 
 	private int tutorial;
 	
-	public Lab(String dept, int id, int lecture, int tutorial) {
-		super(dept, id, lecture);
+	public Lab(String dept, int id, int lecture, int tutorial, int rank) {
+		super(dept, id, lecture, rank);
 		this.tutorial = tutorial;
 	}
 	

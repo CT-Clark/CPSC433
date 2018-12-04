@@ -1,25 +1,37 @@
 package structures;
 
-public class Class implements Cloneable {
+/**
+ * This class defines a superclass for the course and lab objects
+ */
+
+public class Class implements Cloneable, Comparable<Class> {
 
 	private String dept;
 	private int id;
 	private int lecture;
+	private int rank;
+	
+	public Class(String dept, int id, int lecture, int rank) {
+		this.dept = dept;
+		this.id = id;
+		this.lecture = lecture;
+		this.rank = rank;
+	}
+	
 	
 	public Class(String dept, int id, int lecture) {
 		this.dept = dept;
 		this.id = id;
 		this.lecture = lecture;
+		this.setRank(0);
 	}
-	
-	public Class() {
-		this.dept = null;
-	}
-	
+
+	// Clones a class
 	public Class(Class newClass) {
 		this.dept = newClass.dept;
 		this.id = newClass.id;
 		this.lecture = newClass.lecture;
+		this.rank = newClass.rank;
 	}
 	
 	@Override
@@ -39,37 +51,36 @@ public class Class implements Cloneable {
 		
 		Class c = (Class) o;
 		
-		return dept.compareTo(c.dept) == 0 && Integer.compare(id, c.id) == 0 && Integer.compare(lecture, c.lecture) == 0;
+		return dept.compareTo(c.dept) == 0 && Integer.compare(id, c.id) == 0 && Integer.compare(lecture, c.lecture) == 0 && Integer.compare(rank, c.rank) == 0;
 	}
 	
-	public String getDept() {
-		return dept;
+	@Override
+	public int compareTo(Class c) {
+		return this.rank - c.rank;
 	}
 	
-	public void setDept(String dept) {
-		this.dept = dept;
-	}
+	public String getDept() { return dept; }
 	
-	public int getId() {
-		return id;
-	}
+	public void setDept(String dept) { this.dept = dept; }
 	
-	public void setId(int id) {
-		this.id = id;
-	}
+	public int getId() { return id; }
 	
-	public int getLecture() {
-		return lecture;
-	}
+	public void setId(int id) { this.id = id; }
 	
-	public void setLecture(int lecture) {
-		this.lecture = lecture;
-	}
+	public int getLecture() { return lecture; }
 	
-	public String getType() {
-		return null;
-	}
+	public void setLecture(int lecture) { this.lecture = lecture; }
 	
+	public String getType() { return null; }
+	
+	public int getRank() {
+		return rank;
+	}
+
+	public void setRank(int rank) {
+		this.rank = rank;
+	}
+
 	public String getLectureString() {
 		if (lecture == -1) {
 			return " ";
@@ -83,5 +94,5 @@ public class Class implements Cloneable {
 	public String getTutorialString() {
 		return "";
 	}
-	
+
 }
