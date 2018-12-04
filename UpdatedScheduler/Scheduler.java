@@ -31,6 +31,21 @@ public class Scheduler {
 	private static ArrayList<Pair<Class, Class>> pairs = new ArrayList<>();
 	private static ArrayList<Assignment> assignList = new ArrayList<>();
 	private static Assignment partassign;
+
+	// For 813/913 requirements
+	private static Course class813 = new Course("CPSC", 813, 1);
+	private static Course class913 = new Course("CPSC", 813, 1);
+
+	// Diagnostics
+	public static long creationSteps = 0;
+	public static long assignClassSteps = 0;
+	public static long preferenceEvalSteps = 0;
+	public static long sameSlotEvalSteps = 0;
+	public static long pairEvalSteps = 0;
+	private static long unwantedSteps = 0;
+	private static long steps500 = 0;
+	private static long conflictSteps = 0;
+	private static long notCompatibleSteps = 0;
 	
 	public static void main(String[] args){
 	
@@ -43,13 +58,113 @@ public class Scheduler {
 			throw new IllegalArgumentException("Input file not available: " + Paths.get(path) + "!");
 		}
 
+		// Parse the input file and create lists of important info
 		try {
 			parseInput(args[0]); // Pass the file to parse through the command line
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		System.out.println(partassign);
+		// These ensure the 813-313/913-413 requirements are met
+		// Creates a new notCompatible listing if CPSC 813/913 exist
+		for(Class c : getClasses()) {
+			// Check if CPSC 813 even exists
+			if(c.getType().equals("course") && c.getDept().equals("CPSC") && c.getId() == 813) {
+				// Any nonCompatible 313 course also extends to not being compatible with 813
+				for(Class c1 : getClasses()) {
+					if(c1.getDept().equals("CPSC") && c1.getId() == 313) {
+						Pair<Class, Class> newPair1 = new Pair(c, c1);
+						getNotCompatible().add(newPair1);
+					}
+				}
+				// Go through and any course notCompatible with CPSC 313 is also not compatible with CPSC 813
+				for(Pair<Class, Class> pair : getNotCompatible()) {
+					boolean dupFound = false; // Make sure we're not adding in duplicate pairs
+					// Check the first side of the notCompatible, then the second
+					if(pair.getFirst().getDept().equals("CPSC") && pair.getFirst().getId() == 313) {
+						Pair<Class, Class> newPair1 = new Pair(c, pair.getFirst());
+						Pair<Class, Class> newPair2 = new Pair(c, pair.getSecond());
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair1)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair1); }
+						dupFound = false;
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair2)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair2); }
+					} else if (pair.getSecond().getDept().equals("CPSC") && pair.getSecond().getId() == 313) {
+						Pair<Class, Class> newPair1 = new Pair(c, pair.getFirst());
+						Pair<Class, Class> newPair2 = new Pair(c, pair.getSecond());
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair1)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair1); }
+						dupFound = false;
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair2)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair2); }
+					}
+				}
+			// Check if CPSC 913 even exists
+			} else if (c.getType().equals("course") && c.getDept().equals("CPSC") && c.getId() == 913) {
+				for(Class c1 : getClasses()) {
+					if(c1.getDept().equals("CPSC") && c1.getId() == 413) {
+						Pair<Class, Class> newPair1 = new Pair(c, c1);
+						getNotCompatible().add(newPair1);
+					}
+				}
+				// Go through and any course notCompatible with CPSC 313 is also not compatible with CPSC 813
+				for(Pair<Class, Class> pair : getNotCompatible()) {
+					boolean dupFound = false; // Make sure we're not adding in duplicate pairs
+					// Check the first side of the notCompatible, then the second
+					if(pair.getFirst().getDept().equals("CPSC") && pair.getFirst().getId() == 413) {
+						Pair<Class, Class> newPair1 = new Pair(c, pair.getFirst());
+						Pair<Class, Class> newPair2 = new Pair(c, pair.getSecond());
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair1)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair1); }
+						dupFound = false;
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair2)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair2); }
+					} else if (pair.getSecond().getDept().equals("CPSC") && pair.getSecond().getId() == 413) {
+						Pair<Class, Class> newPair1 = new Pair(c, pair.getFirst());
+						Pair<Class, Class> newPair2 = new Pair(c, pair.getSecond());
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair1)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair1); }
+						dupFound = false;
+						for(Pair<Class, Class> pair2 : getNotCompatible()) {
+							if (pair2.equals(newPair2)) {
+								dupFound = true;
+							}
+						}
+						if(!dupFound) { getNotCompatible().add(newPair2); }
+					}
+				}
+			}
+		}
+
+		System.out.println(partassign); // Prints out the initial assignment
 
 		// System.out.println("Finished parsing and creating first tier nodes.");
 
@@ -61,15 +176,7 @@ public class Scheduler {
 		// If it's finished, that's our answer
 
 		double run = 0;
-		double assignMade = 0;
 		boolean foundResult = false;
-
-		/*
-		for(Class c : getClasses()) {
-			System.out.println(c);
-		}
-		*/
-
 
 		while(!foundResult) {
 
@@ -88,24 +195,48 @@ public class Scheduler {
 				}
 			}
 
-			assignList.remove(result);
-			assignList.trimToSize();
+			assignList.remove(result); // Remove the selected assignment from the list of assignments to expand
+			assignList.trimToSize(); // Just an extra trim for the assignList
 
 			// Uncomment if you would like to see progress for long runs
-			if((run % 10) == 0) { System.out.println("RUN: " + run);
-			System.out.println(result);
-			System.out.println("Number of courses left to assign: " + result.getUnassignedClasses().size());
-			result.printTotalPens();
-			System.out.println("Size of assignList: " + assignList.size());}
+			if((run % 100) == 0) {
+				System.out.println("RUN: " + run);
+				System.out.println(result);
+				System.out.println("Number of courses left to assign: " + result.getUnassignedClasses().size());
+				result.printTotalPens();
+				System.out.println("Size of assignList: " + assignList.size());
 
-			//System.out.println("Num of Assigns in assignList: " + assignList.size());
+				// Diagnostic numbers
+				System.out.println(creationSteps);
+				System.out.println(assignClassSteps);
+				System.out.println(preferenceEvalSteps);
+				System.out.println(sameSlotEvalSteps);
+				System.out.println(pairEvalSteps + "\n");
+				// -----
+				System.out.println(unwantedSteps);
+				System.out.println(steps500);
+				System.out.println(conflictSteps);
+				System.out.println(notCompatibleSteps);
+			}
 
 			// An answer has been found
 			if(result.getUnassignedClasses().size() == 0){
 				foundResult = true;
 				System.out.println("FINAL ASSIGNMENT");
 				System.out.println(result);
+
+				// Diagnostic numbers
 				result.printTotalPens();
+				System.out.println(creationSteps);
+				System.out.println(assignClassSteps);
+				System.out.println(preferenceEvalSteps);
+				System.out.println(sameSlotEvalSteps);
+				System.out.println(pairEvalSteps + "\n");
+				// -----
+				System.out.println(unwantedSteps);
+				System.out.println(steps500);
+				System.out.println(conflictSteps);
+				System.out.println(notCompatibleSteps);
 			}
 			// If an answer hasn't been found yet...
 			else {
@@ -129,7 +260,7 @@ public class Scheduler {
 							// Works correctly
 							if (!(c.getLecture() >= 90 && p.getFirst().getStartTime().isBefore(LocalTime.parse("18:00")))) {
 
-								//
+								// Check to make sure CPSC 813/913 are on Tuesdays at a particular time
 								if (c.getId() == 813 || c.getId() == 913) {
 									// Make sure that 813 and 913 are on Tuesday
 									if (!p.getFirst().getDay().equals("TU")) {
@@ -143,9 +274,9 @@ public class Scheduler {
 								}
 
 								// Check to see if the course is about to occupy an unwanted slot
-								// Works correctly
 								boolean unwantedFound = false;
 								for (Pair<Class, Slot> up : unwanted) {
+									unwantedSteps++;
 									if (c.equals(up.getFirst()) && p.getFirst().equals(up.getSecond())) {
 										unwantedFound = true;
 										break;
@@ -158,119 +289,102 @@ public class Scheduler {
 								}
 
 								// Checks to see if it occurs over lunch
-								// Works correctly
 								LocalTime start = LocalTime.parse("11:00");
 								LocalTime end = LocalTime.parse("12:30");
-								if (!(c.getType().equals("course")
+								if ((c.getType().equals("course")
 										&& p.getFirst().getDay().equals("TU")
 										&& (p.getFirst().getStartTime().equals(start)
 										|| (p.getFirst().getStartTime().isAfter(start)
 										&& p.getFirst().getStartTime().isBefore(end))))) {
+									continue;
+								}
 
 
-									// Checks to make sure that if a 500 level course has been assigned to this slot
-									// that it doesn't assign another 500 level course to it
-									// Works correctly
-									boolean found500 = false;
-									if (c.getType().equals("course")) {
-										for (Class cl : p.getSecond()) {
-											// If this is the second 500 level course in the slot, don't assign
-											if (cl.getId() >= 500
-													&& c.getId() >= 500
-													&& cl.getType().equals("course")) {
-												found500 = true;
-												//System.out.println("Too many 500 level courses");
+								// Checks to make sure that if a 500 level course has been assigned to this slot
+								// that it doesn't assign another 500 level course to it
+								// Works correctly
+								boolean found500 = false;
+								if (c.getType().equals("course")) {
+									for (Class cl : p.getSecond()) {
+										steps500++;
+										// If this is the second 500 level course in the slot, don't assign
+										if (cl.getId() >= 500
+												&& c.getId() >= 500
+												&& cl.getType().equals("course")) {
+											found500 = true;
+											//System.out.println("Too many 500 level courses");
 												//System.out.println(c);
-												break;
-											}
+											break;
 										}
 									}
-									if (found500) {
-										continue;
-									}
+								}
+								// Go on to try to assign the next class
+								if (found500) {
+									continue;
+								}
 
 
-									// Check to see if placing it here would conflict with other slots
-									boolean conflictFound = false;
-									for (Pair<Slot, HashSet<Class>> conSlot : result.getAssign()) {
-										// Don't worry about checking slots if they're empty
-										if (conSlot.getSecond().size() > 0) {
-											// Don;t check if the slots aren't on the same day
-											// Check only slots that occur at the same time
-											if ((conSlot.getFirst().getDay().equals(p.getFirst().getDay())
-													|| (conSlot.getFirst().getDay().equals("MO") && p.getFirst().getDay().equals("FR"))
-													|| (conSlot.getFirst().getDay().equals("FR") && p.getFirst().getDay().equals("MO"))) && (conSlot.getFirst().getStartTime().equals(p.getFirst().getStartTime())
-													|| (conSlot.getFirst().getStartTime().isAfter(p.getFirst().getStartTime())
-													&& conSlot.getFirst().getStartTime().isBefore(p.getFirst().getEndTime()))
-													|| (p.getFirst().getStartTime().isAfter(conSlot.getFirst().getStartTime())
-													&& p.getFirst().getStartTime().isBefore(conSlot.getFirst().getEndTime())))) {
+								// Check to see if placing it here would conflict with other slots
+								// 813/913 conflict prevention built-in
+								boolean conflictFound = false;
+								for (Pair<Slot, HashSet<Class>> conSlot : result.getAssign()) {
+									conflictSteps++;
+									// Don't worry about checking slots if they're empty
+									if (!conSlot.getSecond().isEmpty()) {
+										// Don;t check if the slots aren't on the same day
+										// Check only slots that occur at the same time
+										if ((conSlot.getFirst().getDay().equals(p.getFirst().getDay())
+												|| (conSlot.getFirst().getDay().equals("MO") && p.getFirst().getDay().equals("FR"))
+												|| (conSlot.getFirst().getDay().equals("FR") && p.getFirst().getDay().equals("MO")))
+												&& (conSlot.getFirst().getStartTime().equals(p.getFirst().getStartTime())
+												|| (conSlot.getFirst().getStartTime().isAfter(p.getFirst().getStartTime())
+												&& conSlot.getFirst().getStartTime().isBefore(p.getFirst().getEndTime()))
+												|| (p.getFirst().getStartTime().isAfter(conSlot.getFirst().getStartTime())
+												&& p.getFirst().getStartTime().isBefore(conSlot.getFirst().getEndTime())))) {
 
-												// Tutorials and Courses for the same LEC number cannot go together
-												for (Class conClass : conSlot.getSecond()) {
-													if (conClass.getDept().equals(c.getDept())
-															&& conClass.getId() == c.getId()
-															&& (conClass.getLecture() == c.getLecture() // If the lecture number is the same
-															|| c.getLecture() == -1             // Or if it's supposed to be open to everyone no matter the lecture
-															|| conClass.getLecture() == -1)
-															&& !conClass.equals(c)) { // Don't compare the same classes
-														conflictFound = true;
-														//System.out.println("Courses and their respective tutorials cannot be assigned at the same times");
-														break;
-													}
-
-													// CPSC 313, 413, 813, and 913 requirements
-													if (conClass.getDept().equals("CPSC") && c.getDept().equals("CPSC")
-															&& ((conClass.getId() == 813
-															&& c.getId() == 313)
-															|| (conClass.getId() == 313
-															&& c.getId() == 813))
-															|| ((conClass.getId() == 913
-															&& c.getId() == 413)
-															|| (conClass.getId() == 413
-															&& c.getId() == 913))) {
-														conflictFound = true;
-														System.out.println("CPSC 313/413/813/913 conflict");
-														break;
-													}
-												}
-												if (conflictFound) {
+											// Tutorials and Courses for the same LEC number cannot go together
+											// Go through all of the classes in the slots that conflict with the slot we're trying to assign a class to
+											for (Class conClass : conSlot.getSecond()) {
+												conflictSteps++;
+												// If it's the same type of class, break, they can't go together
+												if (conClass.getDept().equals(c.getDept())
+														&& conClass.getId() == c.getId()
+														&& (conClass.getLecture() == c.getLecture() // If the lecture number is the same
+														|| c.getLecture() == -1             // Or if it's supposed to be open to everyone no matter the lecture
+														|| conClass.getLecture() == -1)
+														&& !conClass.equals(c)) { // Don't compare the same classes
+													conflictFound = true;
+													//System.out.println("Courses and their respective tutorials cannot be assigned at the same times");
 													break;
 												}
 
 												// Check to make sure there will not be a nonCompatible pair of courses in the assignment
 												for (Pair<Class, Class> p2 : notCompatible) {
+													notCompatibleSteps++;
 													// If the class to add is the same as the first nonCompatible element
 													if (c.equals(p2.getFirst())) {
-														for (Class cnc : conSlot.getSecond()) {
-															if (p2.getSecond().equals(cnc)) {
-																conflictFound = true;
-																//System.out.println("Class wasn't compatible");
-																break;
-															}
-														}
-														if (conflictFound) {
+														notCompatibleSteps++;
+														if (p2.getSecond().equals(conClass)) {
+															conflictFound = true;
+															//System.out.println("Class wasn't compatible");
 															break;
 														}
 														// Of if it's the second
 													} else if (c.equals(p2.getSecond())) {
-														for (Class cnc : conSlot.getSecond()) {
-															if (p2.getFirst().equals(cnc)) {
-																conflictFound = true;
-																//System.out.println("Class wasn't compatible");
-																break;
-															}
-														}
-														if (conflictFound) {
+														notCompatibleSteps++;
+														if (p2.getFirst().equals(conClass)) {
+															conflictFound = true;
+															//System.out.println("Class wasn't compatible");
 															break;
 														}
 													}
 												}
-
+											}
+											// Go on to try to assign the next class
+											if (conflictFound) {
+												break;
 											}
 										}
-									}
-									if (conflictFound) {
-										continue;
 									}
 
 									// Create a new node
@@ -288,6 +402,7 @@ public class Scheduler {
 												if (a.equals(assign)) {
 													//System.out.println("Identifical assignment found");
 													alreadyInList = true;
+													break;
 												}
 											}
 										}
@@ -324,6 +439,8 @@ public class Scheduler {
 			List<String> inputFile = Files.readAllLines(Paths.get(path));
 			boolean partialAssignmentReached = false;
 			boolean partialAssignmentReachedAgain = false;
+
+
 
 			int lastBreakpoint = 0;
 			int counter = 0;
@@ -497,6 +614,8 @@ public class Scheduler {
 				continue;
 			}
 			Pair<Class, Class> pair = parsePair(line);
+
+
 			getNotCompatible().add(pair);
 		}
 	}
