@@ -79,15 +79,21 @@ public class Assignment {
 
 				// Evaluate the penalty for Classes not being placed in their preferred slot
 				for (Pair<Pair<Class, Slot>, Double> prefs : preferences) {
+					Scheduler.preferenceEvalSteps++;
+					// If the class isn't assigned to its preference slot, add penalty
 					if (prefs.getFirst().getFirst().equals(c) && !prefs.getFirst().getSecond().equals(p.getFirst())) {
 						result += prefs.getSecond();
 						total_pen_preferences += prefs.getSecond();
+						break;
+						// If the class is assigned to its preferred slot, just break
+					} else if (prefs.getFirst().getFirst().equals(c) && prefs.getFirst().getSecond().equals(p.getFirst())) {
 						break;
 					}
 				}
 
 				// Evaluate the different sections in the same slot penalty
 				for(Class c2 : p.getSecond()) { // Compare with another class
+					Scheduler.sameSlotEvalSteps++;
 					if((!c.equals(c2))  // If they're the same object, don't compare them
 							&& (c.getDept().equals(c2.getDept())  // If they're in the same dept...
 							&& c.getType().equals(c2.getType())   // And they're the same type...
@@ -97,10 +103,12 @@ public class Assignment {
 					}
 				}
 
-				// Evalute the penalty for not being paired
+				// Evaluate the penalty for not being paired
 				for (Pair<Class, Class> pair : pairs) { // Iterate through all of the possible pairs
+					Scheduler.pairEvalSteps++;
 
-					if(unassignedClasses.contains(pair.getFirst()) && unassignedClasses.contains(pair.getSecond())) {
+					// If
+					if(unassignedClasses.contains(pair.getFirst()) || unassignedClasses.contains(pair.getSecond())) {
 						break;
 					}
 
@@ -195,9 +203,11 @@ public class Assignment {
 		ArrayList<Pair<Slot, HashSet<Class>>> result = new ArrayList<>(); // Create new assign object
 		// Initialize the new object with all of the slots
 		for (Pair<Slot, HashSet<Class>> s : this.assign) {
+
 			Pair<Slot, HashSet<Class>> p1 = new Pair<>(s.getFirst(), new HashSet<>());
 			// Then for all of the new slots, copy the class objects
 			for(Class c : s.getSecond()) {
+				Scheduler.creationSteps++;
 				p1.getSecond().add(c);
 			}
 			result.add(p1);
@@ -215,7 +225,9 @@ public class Assignment {
 
 	public void assignClass(Slot s, Class c) {
 		for(Pair<Slot, HashSet<Class>> p : assign) {
+			Scheduler.assignClassSteps++;
 			if(p.getFirst().equals(s)) {
+
 				p.getSecond().add(c);
 				break;
 			}
