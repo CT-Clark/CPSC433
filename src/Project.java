@@ -13,14 +13,22 @@ public class Project {
     public static int pen_coursemin = 2;
     public static int pen_labsmin = 2;
     public static int pen_notpaired = 4;
+    public static int w_minfilled = 5;
+    public static int w_pair = 2;
+    public static int w_pref = 2;
+    public static int w_secdiff = 4;
 
 
     public static void main(String[] args) throws IOException {
-        if(args.length == 5) {
-            pen_coursemin = Integer.parseInt(args[1]);
-            pen_labsmin = Integer.parseInt(args[2]);
-            pen_notpaired = Integer.parseInt(args[3]);
-            pen_section = Integer.parseInt(args[4]);
+        if(args.length == 9) {
+            pen_coursemin = Integer.parseInt(args[1]) * Integer.parseInt(args[5]);
+            pen_labsmin = Integer.parseInt(args[2]) * Integer.parseInt(args[6]);
+            pen_notpaired = Integer.parseInt(args[3]) * Integer.parseInt(args[7]);
+            pen_section = Integer.parseInt(args[4]) * Integer.parseInt(args[8]);
+            w_minfilled = Integer.parseInt(args[5]);
+            w_pref = Integer.parseInt(args[6]);
+            w_pair = Integer.parseInt(args[7]);
+            w_secdiff = Integer.parseInt(args[8]);
         }
 
         Parser parser = new Parser(args[0]);
