@@ -1,0 +1,25 @@
+Name:
+MinimalTest
+
+Course slots:
+TU, 18:00, 5, 0
+MO, 8:00, 1, 0
+
+Lab slots:
+
+Courses:
+CPSC 433 LEC 01
+CPSC 433 LEC 02
+CPSC 433 LEC 03
+
+Labs:
+
+Not compatible:
+
+Unwanted:
+
+Preferences:
+
+Pair:
+
+Partial assignments:

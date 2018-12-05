@@ -1,0 +1,28 @@
+Name:
+MinimalTest
+
+Course slots:
+TU, 18:00, 5, 2
+MO, 8:00, 5, 2
+TU, 8:00, 5, 2
+
+Lab slots:
+
+Courses:
+CPSC 813 LEC 01
+CPSC 913 LEC 01
+CPSC 413 LEC 01
+CPSC 313 LEC 04
+CPSC 100 LEC 02
+
+Labs:
+
+Not compatible:
+
+Unwanted:
+
+Preferences:
+
+Pair:
+
+Partial assignments:

@@ -1,0 +1,32 @@
+Name:
+MinimalTest
+
+Course slots:
+
+Lab slots:
+TU, 18:00, 5, 0
+MO, 8:00, 2, 0
+TU, 8:00, 5, 0
+MO, 10:00, 5, 0
+
+Courses:
+
+Labs:
+CPSC 813 TUT 01
+CPSC 913 TUT 01
+CPSC 413 TUT 01
+CPSC 313 TUT 04
+
+Not compatible:
+
+Unwanted:
+
+Preferences:
+MO, 8:00, CPSC 813 TUT 01, 100
+MO, 8:00, CPSC 913 TUT 01, 75
+MO, 8:00, CPSC 413 TUT 01, 50
+MO, 8:00, CPSC 313 TUT 04, 25
+
+Pair:
+
+Partial assignments:
