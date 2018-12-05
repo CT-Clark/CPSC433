@@ -46,7 +46,6 @@ public class GeneralSlot extends Slot {
             throw new IllegalStateException("Corrupted input data in Course slots!");
         }
 
-        System.out.println(toString());
     }
 
     public GeneralSlot(GeneralSlot slot) {

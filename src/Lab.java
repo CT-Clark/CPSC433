@@ -5,13 +5,11 @@ public class Lab extends Lecture {
     public Lab(String department, int number, int courseSection, int section) {
         super(department, number, section);
         this.courseSection = courseSection;
-        System.out.println(toString());
     }
 
     public Lab(String department, int number, int section) {
         super(department, number, section);
         courseSection = NOT_ASSIGNED_TO_LECTURE_SECTION;
-        System.out.println(toString());
     }
 
     @Override
@@ -31,8 +29,15 @@ public class Lab extends Lecture {
     }
 
     public boolean equals(Object lab) {
-        if(lab instanceof  Lab) {
-            return super.equals(lab) && ((Lab) lab).courseSection == courseSection;
+
+        if(lab instanceof Lab){
+            Lab rLab = (Lab) lab;
+            if(department.equals(rLab.department) &&
+                    number == rLab.number &&
+                    section == rLab.section &&
+                    courseSection == rLab.courseSection) {
+                return true;
+            }
         }
         if(lab instanceof String) {
             equals(produceLab((String) lab));

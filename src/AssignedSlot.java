@@ -93,8 +93,13 @@ public class AssignedSlot extends Slot {
 
     public int evaluateSoftConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots, Collection<Lecture> unasssignedLectures) {
         //Check preferences
-        if(lec.preferedSlots.indexOf(this) == -1) {
-            evalScore += lec.preferenceScore * Project.w_pref;
+        for(Map.Entry<Slot, Integer> preference : lec.preferredSlots.entrySet()){
+            if(!this.equals(preference.getKey())) {
+                evalScore += preference.getValue() * Project.w_pref;
+            }
+        }
+        if(lec.preferredSlots.get(this) != null) {
+            evalScore += lec.preferredSlots.get(this) * Project.w_pref;
         }
 
         //Check if different sections overlap
@@ -132,18 +137,16 @@ public class AssignedSlot extends Slot {
         }
 
         List<Lecture> lectures = new ArrayList<>();
+        //This slot
+        lectures.addAll(assigned);
+        //All overlapping slots
         for(Slot slot : overlaps) {
             lectures.addAll(slot.getAssignedLectures());
         }
 
-
         for(Lecture lecture : lec.pair) {
-            //Already assigned
-            if(!unasssignedLectures.contains(lecture)) {
-                //But not in this slot
-                if(!lectures.contains(lecture)) {
-                    evalScore += Project.pen_notpaired * Project.w_pair;
-                }
+            if (!lectures.contains(lecture) && !unasssignedLectures.contains(lecture)) {
+                evalScore += Project.pen_notpaired * Project.w_pair;
             }
         }
         return evalScore;

@@ -2,7 +2,6 @@ public class Course extends Lecture {
 
     public Course(String department, int number, int section) {
         super(department, number, section);
-        System.out.println(toString());
     }
 
     @Override
@@ -44,5 +43,20 @@ public class Course extends Lecture {
             id += section;
         }
         return id;
+    }
+
+    public boolean equals(Object lecture){
+        if(lecture instanceof Course){
+            Course lec = (Course) lecture;
+            if(department.equals(lec.department) &&
+                    number == lec.number &&
+                    section == lec.section) {
+                return true;
+            }
+        }
+        if (lecture instanceof String) {
+            return equals(produce((String)lecture));
+        }
+        return false;
     }
 }

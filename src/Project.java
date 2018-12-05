@@ -15,10 +15,10 @@ public class Project {
     public static int pen_coursemin = 2;
     public static int pen_labsmin = 2;
     public static int pen_notpaired = 4;
-    public static int w_minfilled = 5;
-    public static int w_pair = 2;
-    public static int w_pref = 2;
-    public static int w_secdiff = 4;
+    public static int w_minfilled = 1;
+    public static int w_pair = 1;
+    public static int w_pref = 1;
+    public static int w_secdiff = 1;
 
 
     public static void main(String[] args) throws IOException {

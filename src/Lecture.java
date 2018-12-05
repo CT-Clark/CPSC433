@@ -7,8 +7,9 @@ public abstract class Lecture {
     protected String department; // CPSC/SENG
     protected int number; // e.g. 433
     protected int section; // e.g. 1, 3
-    protected List<Slot> preferedSlots;
-    protected int preferenceScore;
+    protected HashMap<Slot, Integer> preferredSlots;
+    //protected List<Slot> preferedSlots;
+    //protected int preferenceScore;
     protected int constraintCount;
     protected List<Slot> unwanted;
     protected List<Lecture> not_compatible;
@@ -16,7 +17,7 @@ public abstract class Lecture {
 
 
     public Lecture(String department, int number, int section) {
-        preferedSlots = new ArrayList<>();
+        preferredSlots = new HashMap<>();
         unwanted = new ArrayList<>();
         pair = new ArrayList<>();
         not_compatible = new ArrayList<>();
@@ -77,20 +78,7 @@ public abstract class Lecture {
         return string.toString();
     }
 
-    public boolean equals(Object lecture){
-        if(lecture instanceof Lecture && this instanceof Lecture){
-            Lecture lec = (Lecture) lecture;
-            if(department.equals(lec.department) &&
-            number == lec.number &&
-            section == lec.section) {
-                return true;
-            }
-        }
-        if (lecture instanceof String) {
-            return equals(produce((String)lecture));
-        }
-        return false;
-    }
+    public abstract boolean equals(Object lecture);
 
     protected abstract Lecture produce(String representation);
 

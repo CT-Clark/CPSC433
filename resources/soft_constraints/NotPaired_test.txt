@@ -10,19 +10,19 @@ MO, 8:00, 1, 0
 Courses:
 
 Labs:
-CPSC 813 TUT 01
+CPSC 713 TUT 01
 CPSC 913 TUT 01
-CPSC 413 TUT 01
+CPSC 613 TUT 01
 CPSC 313 TUT 04
 
 Not compatible:
 
 Unwanted:
-CPSC 413 TUT 01, TU, 18:00
+CPSC 613 TUT 01, TU, 18:00
 
 Preferences:
 
 Pair:
-CPSC 813 TUT 01, CPSC 413 TUT 01
+CPSC 713 TUT 01, CPSC 613 TUT 01
 
 Partial assignments:

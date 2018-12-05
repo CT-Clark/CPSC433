@@ -99,21 +99,25 @@ public class SearchControl {
         List<Lecture> course913 = new ArrayList<>();
 
         for(Lecture singleLec : lectures) {
-            if(singleLec instanceof Course && singleLec.department.equals("CPSC") && singleLec.number == 313) {
+            if(singleLec.department.equals("CPSC") && singleLec.number == 313) {
                 course313.add(singleLec);
             }
-            if(singleLec instanceof Course && singleLec.department.equals("CPSC") && singleLec.number == 413){
+            if(singleLec.department.equals("CPSC") && singleLec.number == 413){
                 course413.add(singleLec);
             }
-            if(singleLec instanceof Course && singleLec.department.equals("CPSC") && singleLec.number == 813){
+            if(singleLec.department.equals("CPSC") && singleLec.number == 813){
                 course813.add(singleLec);
             }
-            if(singleLec instanceof Course && singleLec.department.equals("CPSC") && singleLec.number == 913){
+            if(singleLec.department.equals("CPSC") && singleLec.number == 913){
                 course913.add(singleLec);
             }
         }
 
-        Slot blockedSlot = courseSlots.get("TU,1800," + GeneralSlot.COURSE);
+        if(course313.isEmpty() && course413.isEmpty()){
+            return;
+        }
+
+        Slot blockedSlot = labSlots.get("TU,1800," + !GeneralSlot.COURSE);
         if(blockedSlot == null) {
             if(!course813.isEmpty() || !course913.isEmpty()) {
                 throw new IllegalStateException("Course CPSC 813 or 913 could not be assigned to the predefined slot!");
@@ -126,15 +130,15 @@ public class SearchControl {
                 course313sec.addNotCompatible(lec813sec);
 
                 for(Lecture correspondingLab : course313sec.not_compatible) {
-                   if(correspondingLab instanceof Lab) {
-                       Lab correspondingLab2 = (Lab) correspondingLab;
-                    if(correspondingLab2.department.equals(course313sec.department) &&
-                            correspondingLab2.number == course313sec.number &&
-                    correspondingLab2.getCourseSection() == course313sec.section) {
-                        correspondingLab2.addNotCompatible(lec813sec);
-                        lec813sec.addNotCompatible(correspondingLab2);
-                    }
-                   }
+                   //if(correspondingLab instanceof Lab) {
+                   //   Lab correspondingLab2 = (Lab) correspondingLab;
+                    //if(correspondingLab2.department.equals(course313sec.department) &&
+                    //        correspondingLab2.number == course313sec.number &&
+                    //correspondingLab2.getCourseSection() == course313sec.section) {
+                        correspondingLab.addNotCompatible(lec813sec);
+                        lec813sec.addNotCompatible(correspondingLab);
+                    //}
+                   //}
                 }
             }
 
@@ -157,19 +161,19 @@ public class SearchControl {
                 course413sec.addNotCompatible(lec913sec);
 
                 for(Lecture correspondingLab : course413sec.not_compatible) {
-                    if(correspondingLab instanceof Lab) {
-                        Lab correspondingLab2 = (Lab) correspondingLab;
-                        if(correspondingLab2.department.equals(course413sec.department) &&
-                                correspondingLab2.number == course413sec.number &&
-                                correspondingLab2.getCourseSection() == course413sec.section) {
-                            correspondingLab2.addNotCompatible(lec913sec);
-                            lec913sec.addNotCompatible(correspondingLab2);
-                        }
-                    }
+                    //if(correspondingLab instanceof Lab) {
+                    //    Lab correspondingLab2 = (Lab) correspondingLab;
+                    //    if(correspondingLab2.department.equals(course413sec.department) &&
+                     //           correspondingLab2.number == course413sec.number &&
+                      //          correspondingLab2.getCourseSection() == course413sec.section) {
+                            correspondingLab.addNotCompatible(lec913sec);
+                            lec913sec.addNotCompatible(correspondingLab);
+                     //   }
+                    //}
                 }
             }
 
-            if(!course313.isEmpty()) {
+            if(!course413.isEmpty()) {
                 for (Lecture transativeForbidden : course413.get(0).not_compatible) {
                     if (transativeForbidden instanceof Course) {
                         lec913sec.addNotCompatible(transativeForbidden);

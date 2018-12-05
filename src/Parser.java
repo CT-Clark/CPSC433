@@ -18,7 +18,6 @@ public class Parser {
         this.path = path;
         Path currentRelativePath = Paths.get("");
         String s = currentRelativePath.toAbsolutePath().toString();
-        System.out.println("Current relative path is: " + s);
         if (!Files.exists(Paths.get(path)) || !Files.isRegularFile(Paths.get(path))) {
             throw new IllegalArgumentException("Input file not available: " + Paths.get(path) + "!");
         }
@@ -135,8 +134,9 @@ public class Parser {
                 slot = courseSlots.get(id);
             }
             if(lec1 != null && slot != null){
-            lec1.preferedSlots.add(slot);
-            lec1.preferenceScore = Integer.valueOf(preference[3].trim());
+                lec1.preferredSlots.put(slot, Integer.valueOf(preference[3].trim()));
+            //lec1.preferedSlots.add(slot);
+            //lec1.preferenceScore = Integer.valueOf(preference[3].trim());
             }  else {
                 System.err.println("Preferences list links to not existing slot or course:\n" + line);
             }
@@ -208,6 +208,47 @@ public class Parser {
             }
             labsMap.put(line, Lab.produceLab(line));
         }
+        includeLab813913();
+    }
+
+    private void includeLab813913() {
+        boolean course413Included = false;
+        boolean course313Included = false;
+
+        boolean corresponding813Lab = false;
+        boolean corresponding913Lab = false;
+
+        for(Lecture lec : courseMap.values()) {
+                if (lec.department.equals("CPSC")) {
+                    if (lec.number == 413) {
+                        course413Included = true;
+                    }
+                    if (lec.number == 313) {
+                        course313Included = true;
+                    }
+                }
+
+        }
+
+        for(Lecture lec : labsMap.values()){
+                if(lec.department.equals("CPSC")){
+                    if(lec.number == 813){
+                        corresponding813Lab = true;
+                    }
+                    if(lec.number == 913) {
+                        corresponding913Lab = true;
+                    }
+                }
+        }
+
+        if(course413Included && !corresponding913Lab){
+            labsMap.putIfAbsent("CPSC 913 TUT 01", Lab.produceLab("CPSC 913 TUT 01"));
+            labSlots.putIfAbsent("TU,1800,false", GeneralSlot.produceSlot("TU, 18:00, 2, 0", false));
+        }
+        if(course313Included && !corresponding813Lab) {
+            labsMap.putIfAbsent("CPSC 813 TUT 01", Lab.produceLab("CPSC 813 TUT 01"));
+            labSlots.putIfAbsent("TU,1800,false", GeneralSlot.produceSlot("TU, 18:00, 2, 0", false));
+        }
     }
 
     private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -247,7 +288,7 @@ public class Parser {
 
     private void saveName(List<String> inputFile, int lastBreakpoint, int counter) {
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
-            System.out.println(line);
+
         }
     }
 }
