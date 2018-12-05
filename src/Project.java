@@ -23,10 +23,10 @@ public class Project {
 
     public static void main(String[] args) throws IOException {
         if(args.length == 9) {
-            pen_coursemin = Integer.parseInt(args[1]) * Integer.parseInt(args[5]);
-            pen_labsmin = Integer.parseInt(args[2]) * Integer.parseInt(args[6]);
-            pen_notpaired = Integer.parseInt(args[3]) * Integer.parseInt(args[7]);
-            pen_section = Integer.parseInt(args[4]) * Integer.parseInt(args[8]);
+            pen_coursemin = Integer.parseInt(args[1]);
+            pen_labsmin = Integer.parseInt(args[2]);
+            pen_notpaired = Integer.parseInt(args[3]);
+            pen_section = Integer.parseInt(args[4]);
             w_minfilled = Integer.parseInt(args[5]);
             w_pref = Integer.parseInt(args[6]);
             w_pair = Integer.parseInt(args[7]);

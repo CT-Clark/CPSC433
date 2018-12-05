@@ -262,13 +262,13 @@ public class SearchControl {
 
         for(Slot slot : assignment.labSlots) {
             if (slot.getAssignedLectures().size() < slot.getMin()) {
-                eval += Project.pen_labsmin;
+                eval += Project.pen_labsmin * Project.w_minfilled;
             }
         }
 
         for(Slot slot : assignment.courseSlots) {
             if (slot.getAssignedLectures().size() < slot.getMin()) {
-                eval += Project.pen_coursemin;
+                eval += Project.pen_coursemin * Project.w_minfilled;
             }
         }
 
