@@ -2,9 +2,11 @@ import java.io.IOException;
 
 /**
  * Authors: Cody Clark, Lily Pollreis, Marcel Baier, Stephen Booth, Christna Eder
- * Date last modified: Nov 6, 2018
+ * Date last modified: Dec 5, 2018
  *
- * (Fill in project description here)
+ * This project implements an ANDTree search in order to find the optimum assignment of classes to possible slots.
+ * The algorithm used was based on a branch-and-bound algorithm that chooses the most optimal current leaf in a tree
+ * of possible assignments and then expands that leaf, repeating this process until the best solution is found. 
  */
 
 public class Project {
