@@ -35,19 +35,22 @@ public class SearchControl {
                 }
             }
         });
+
         //Load partial assignments
         if(s0 != null) {
             best = s0;
-            lectures.removeAll(s0.unassignedLectures);
-            countConstraints(lectures);
-            best.unassignedLectures = new ArrayList<>(orderedLectures);
+            lectures = s0.unassignedLectures;
+            best.unassignedLectures = new ArrayList<>(lectures);
         } else {
-            countConstraints(lectures);
-            best = new Assignment(courseSlots.values(), labSlots.values(), orderedLectures.stream().collect(Collectors.toList()));
+            best = new Assignment(courseSlots.values(), labSlots.values(), lectures);
         }
 
         //Put in CPSC 813 / 913
         addCPSCNotCompatible(lectures);
+        lectures = best.unassignedLectures;
+        countConstraints(lectures);
+        best.unassignedLectures = new ArrayList<>(orderedLectures);
+
     }
 
     public void add500LevelCourseIncompatibilities(List<Lecture> lectures) {
@@ -120,7 +123,7 @@ public class SearchControl {
 
         Slot blockedSlot = courseSlots.get("TU,1800," + GeneralSlot.COURSE);
         if(blockedSlot == null) {
-            if(!course813.isEmpty() && !course913.isEmpty()) {
+            if(!course813.isEmpty() || !course913.isEmpty()) {
                 throw new IllegalStateException("Course CPSC 813 or 913 could not be assigned to the predefined slot!");
             }
         }
@@ -144,14 +147,17 @@ public class SearchControl {
             }
 
 
+            if(!course313.isEmpty()) {
             for(Lecture transativeForbidden : course313.get(0).not_compatible) {
                 if(transativeForbidden instanceof Course) {
                     lec813sec.addNotCompatible(transativeForbidden);
                     transativeForbidden.addNotCompatible(lec813sec);
                 }
             }
+            }
             best = best.assignLecture(lec813sec, blockedSlot);
-            best.removeAssignedLecture(lec813sec);
+            //best.removeAssignedLecture(lec813sec);
+            //best.removeAssignedLecture(lec813sec);
 
         }
 
@@ -173,14 +179,16 @@ public class SearchControl {
                 }
             }
 
-            for(Lecture transativeForbidden : course413.get(0).not_compatible) {
-                if(transativeForbidden instanceof  Course) {
-                    lec913sec.addNotCompatible(transativeForbidden);
-                    transativeForbidden.addNotCompatible(lec913sec);
+            if(!course313.isEmpty()) {
+                for (Lecture transativeForbidden : course413.get(0).not_compatible) {
+                    if (transativeForbidden instanceof Course) {
+                        lec913sec.addNotCompatible(transativeForbidden);
+                        transativeForbidden.addNotCompatible(lec913sec);
+                    }
                 }
             }
             best = best.assignLecture(lec913sec, blockedSlot);
-            best.removeAssignedLecture(lec913sec);
+            //best.removeAssignedLecture(lec913sec);
         }
 
     }

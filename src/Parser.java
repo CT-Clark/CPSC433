@@ -3,10 +3,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Parser {
     private String path;
@@ -88,8 +86,10 @@ public class Parser {
     }
 
     private Assignment savePartialAssignments(List<String> inputFile, int lastBreakpoint, int i) {
-        //TODO: save partial assignment as start state
         Assignment partialAssign = new Assignment(courseSlots.values(), labSlots.values());
+        partialAssign.unassignedLectures = new ArrayList<>(courseMap.values());
+        partialAssign.unassignedLectures.addAll(labsMap.values());
+
         for (String line : inputFile.subList(lastBreakpoint, i)) {
             if (line.isEmpty()) {
                 continue;
@@ -108,8 +108,10 @@ public class Parser {
                 slot = courseSlots.get(id);
             }
 
+            List<Lecture> allLectures = new ArrayList<>(courseMap.values());
+            allLectures.addAll(labsMap.values());
             partialAssign = partialAssign.assignLecture(lec1, slot);
-            partialAssign.unassignedLectures.add(lec1);
+            partialAssign.unassignedLectures.remove(lec1);
             if(partialAssign == null) {
                 throw new IllegalArgumentException("Partial assignments break hard constraints!");
             }

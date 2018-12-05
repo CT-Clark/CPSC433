@@ -130,7 +130,7 @@ public class Assignment {
       Iterator<Lecture> lecIt = unassignedLectures.iterator();
       while(lecIt.hasNext()){
           Lecture lecture = lecIt.next();
-          if(lecture.equals(lec)) {
+          if(lec.equals(lecture)) {
               lec = lecture;
               break;
           }
@@ -161,7 +161,7 @@ public class Assignment {
           newAssign.labSlots.remove(slot);
           newAssign.labSlots.add(newSlot);
       }
-
+      newAssign.unassignedLectures.remove(lec);
       if(!newSlot.checkHardConstraints(lec, courseSlots, labSlots)){
           return null;
       }

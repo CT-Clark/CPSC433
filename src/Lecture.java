@@ -78,7 +78,7 @@ public abstract class Lecture {
     }
 
     public boolean equals(Object lecture){
-        if(lecture instanceof  Lecture){
+        if(lecture instanceof  Lecture && this instanceof Lecture){
             Lecture lec = (Lecture) lecture;
             if(department.equals(lec.department) &&
             number == lec.number &&

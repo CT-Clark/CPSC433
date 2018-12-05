@@ -8,9 +8,7 @@ import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ParserTest {
     private Parser parser;
@@ -160,5 +158,75 @@ public class ParserTest {
 
         String foundSol = best.getPrintableSolution();
         assertTrue(singleSol.toString().equals(best.getPrintableSolution()) || singleSol2.toString().equals(best.getPrintableSolution()));
+    }
+
+    @Test
+    void example1_Test() throws IOException {
+        parser = new Parser("resources/Example1.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNotNull(best);
+        System.out.println("Example 1:\n");
+        System.out.println(best.getPrintableSolution());
+    }
+
+    @Test
+    void example2_Test() throws IOException {
+        parser = new Parser("resources/Example2.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNotNull(best);
+        System.out.println("Example 2:\n");
+        System.out.println(best.getPrintableSolution());
+    }
+
+    @Test
+    void example3_Test() throws IOException {
+        parser = new Parser("resources/Example3.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNotNull(best);
+        System.out.println("Example 3:\n");
+        System.out.println(best.getPrintableSolution());
+    }
+
+    @Test
+    void example4_Test() throws IOException {
+        parser = new Parser("resources/Example4.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNotNull(best);
+        System.out.println("Example 4:\n");
+        System.out.println(best.getPrintableSolution());
+    }
+
+    @Test
+    void example5_Test() throws IOException {
+        parser = new Parser("resources/Example5.txt");
+        assertThrows(IllegalStateException.class, () -> {
+        SearchControl sc = parser.parseInput();
+        });
+    }
+
+    @Test
+    void example6_Test() throws IOException {
+        parser = new Parser("resources/Example6.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNull(best);
+    }
+
+    @Test
+    void example7_Test() throws IOException {
+        parser = new Parser("resources/Example7.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertNull(best);
     }
 }
