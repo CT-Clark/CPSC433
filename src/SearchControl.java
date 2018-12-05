@@ -207,7 +207,7 @@ public class SearchControl {
 
         for(Lecture singleLec : lectures) {
             if(singleLec instanceof Course && (singleLec.department.equals("CPSC") 
-            		|| singleLec.department.equals("SENG"))) { {
+            		|| singleLec.department.equals("SENG"))) {
                 singleLec.addUnwanted(blockedSlot);
             }
         }
