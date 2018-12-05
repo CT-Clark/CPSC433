@@ -131,8 +131,4 @@ public abstract class Lecture {
         return "";
     }
 
-    // TODO: Getter and setter methods for the sets of eval attributes
-
-    // TODO: Assign function - figure out how we're storing already assigned course/lab, unassigned,
-    // and how to go about accessing that data easily
 }

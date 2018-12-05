@@ -27,11 +27,8 @@ public abstract class Slot {
     public abstract void testOverlapping(Slot slot);
     public abstract List<Slot> getOverlappingSlots();
     public abstract boolean checkHardConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots);
-    //public abstract List<Pair> getNotPaired();
-    //public abstract List<Pair> getPaired();
+
     public abstract boolean overlappingLectureSections(Lecture lec);
     public abstract int evaluateSoftConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots, Collection<Lecture> unassignedLectures);
 
-    //public abstract boolean checkHardConstraints(Lecture lec);
-    //public abstract int evaluateSoftConstraints(Lecture lec);
 }

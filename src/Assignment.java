@@ -152,7 +152,6 @@ public class Assignment {
       }
 
       Slot newSlot = slot.assignLecture(lec);
-      //newSlot.evaluateSoftConstraints(lec, courseSlots, labSlots, unassignedLectures);
       newAssign.evalValue += newSlot.getEvalScore() - slot.getEvalScore();
       if(slot.getType() == GeneralSlot.COURSE) {
         newAssign.courseSlots.remove(slot);

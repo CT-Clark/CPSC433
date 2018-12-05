@@ -4,7 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Parser {
     private String path;
@@ -13,8 +12,7 @@ public class Parser {
     private HashMap<String, Slot> courseSlots;
     private HashMap<String, Slot> labSlots;
     private Assignment s0;
-    //private List<Pair> pairs;
-    //private List<Pair> not_compatible;
+
 
     public Parser(String path) {
         this.path = path;
@@ -27,7 +25,6 @@ public class Parser {
     }
 
     public SearchControl parseInput() throws IOException {
-        try (Scanner scanner = new Scanner(new File(path))) {
             List<String> inputFile = Files.readAllLines(Paths.get(path));
 
             int lastBreakpoint = 0;
@@ -78,7 +75,7 @@ public class Parser {
                 counter++;
             }
             s0 = savePartialAssignments(inputFile, lastBreakpoint, counter);
-        }
+
         List<Lecture> lectures = new ArrayList<>();
         lectures.addAll(courseMap.values());
         lectures.addAll(labsMap.values());
@@ -144,19 +141,6 @@ public class Parser {
                 System.err.println("Preferences list links to not existing slot or course:\n" + line);
             }
 
-            /*Lecture lec1 = Lecture.produceLecture(preference[2]);
-            Slot slot = GeneralSlot.produceSlot(preference[0] + ", " + preference[1], lec1 instanceof Lab ? !GeneralSlot.COURSE : GeneralSlot.COURSE);
-
-            if (lec1 instanceof Lab) {
-                Lecture lab = labsMap.get(labsMap.indexOf(lec1));
-                lab.preferedSlots.add(labSlots.get(labSlots.indexOf(slot)));
-                lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
-
-            } else {
-                Lecture lab = courseMap.get(courseMap.indexOf(lec1));
-                lab.preferedSlots.add(courseSlots.get(courseSlots.indexOf(slot)));
-                lab.preferenceScore = Integer.valueOf(preference[3].replace(" ", ""));
-            }*/
         }
     }
 
@@ -179,12 +163,10 @@ public class Parser {
     }
 
     private void saveNotCompatible(List<String> inputFile, int lastBreakpoint, int counter) {
-        //not_compatible = savePairedLectures(inputFile, lastBreakpoint, counter);
         savePairedLectures(inputFile, lastBreakpoint, counter, false);
     }
 
-    private List<Pair> savePairedLectures(List<String> inputFile, int lastBreakpoint, int counter, boolean pair) {
-        List<Pair> couples = new ArrayList<>(counter - lastBreakpoint + 1);
+    private void savePairedLectures(List<String> inputFile, int lastBreakpoint, int counter, boolean pair) {
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.replaceAll(" +", " ");
             if(line.isEmpty()) {
@@ -213,24 +195,7 @@ public class Parser {
                 lec2.addNotCompatible(lec1);
             }
 
-
-
-            //couples.add(new Pair(lec1, lec2));
-            //To be aware: This produces redundant Lecture courses!
-            /*Lecture lec1 = Lecture.produceLecture(notCompatiblePair[0]);
-            Lecture lec2 = Lecture.produceLecture(notCompatiblePair[1]);
-
-
-            Lecture originalLec = courseMap.indexOf(lec1) == -1 ?
-                    labsMap.get(
-                            labsMap.indexOf(lec1)) :
-                    courseMap.get(
-                            courseMap.indexOf(lec1));
-            Lecture originalLec2 = courseMap.indexOf(lec2) == -1 ? labsMap.get(labsMap.indexOf(lec2)) : courseMap.get(courseMap.indexOf(lec2));
-
-            couples.add(new Pair(originalLec, originalLec2));*/
         }
-        return couples;
     }
 
     private void saveLabs(List<String> inputFile, int lastBreakpoint, int counter) {
@@ -246,7 +211,6 @@ public class Parser {
     }
 
     private void saveCourses(List<String> inputFile, int lastBreakpoint, int counter) {
-        //courseMap = new ArrayList<>(inputFile.size());
         courseMap = new HashMap<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.trim();
@@ -269,7 +233,6 @@ public class Parser {
     private HashMap<String, Slot> saveSlots(List<String> inputFile, int lastBreakpoint, int counter, boolean type) {
         HashMap<String, Slot> slotMap = new HashMap<>(inputFile.size());
 
-        //List<Slot> slotList = new ArrayList<>(inputFile.size());
         for (String line : inputFile.subList(lastBreakpoint, counter)) {
             line = line.replaceAll("\\s", "");
             line = line.trim();
@@ -278,7 +241,6 @@ public class Parser {
             }
             Slot newSlot = GeneralSlot.produceSlot(line, type);
             slotMap.put(newSlot.getDay() + "," + newSlot.getStartTime() + "," + type, newSlot);
-            //slotList.add();
         }
         return slotMap;
     }

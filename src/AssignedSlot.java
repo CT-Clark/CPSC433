@@ -37,17 +37,6 @@ public class AssignedSlot extends Slot {
         return false;
     }
 
-    public boolean overlappingLevel(Lecture lec) {
-
-        for(Lecture assignedLec : assigned) {
-            if(assignedLec.getDepartment().equals(lec.department) && assignedLec.number >= 500 && assignedLec.number < 600){
-                return true;
-            }
-        }
-        return false;
-    }
-
-
     public boolean checkHardConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots) {
         //Maximum
         if(assigned.size() > slot.getMax()) {
@@ -58,20 +47,6 @@ public class AssignedSlot extends Slot {
         if(lec.getUnwanted().contains(this)){
             return false;
         }
-        /*if(slot.getUnwanted().contains(lec)){
-            return false;
-        }*/
-
-        //Lab and Courses of one Section should not overlap
-        /*if(overlappingLectureSections(lec)) {
-            return false;
-        }*/
-
-        /*if(lec.department.equals("CPSC") && lec.number >= 500 && lec.number < 600) {
-        if(overlappingLevel(lec)) {
-            return false;
-        }
-        }*/
 
         for(Slot overlappingSlot : slot.getOverlappingSlots()) {
             if(overlappingSlot.overlappingLectureSections(lec)){
@@ -115,16 +90,6 @@ public class AssignedSlot extends Slot {
         }
         return true;
     }
-
-    /*@Override
-    public List<Pair> getNotPaired() {
-        return slot.getNotPaired();
-    }*/
-
-    /*@Override
-    public List<Pair> getPaired() {
-        return slot.getPaired();
-    }*/
 
     public int evaluateSoftConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots, Collection<Lecture> unasssignedLectures) {
         //Check preferences

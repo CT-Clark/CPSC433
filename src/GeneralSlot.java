@@ -11,7 +11,6 @@ public class GeneralSlot extends Slot {
     private boolean type;
     private List<Lecture> unwanted;
     private HashMap<Lecture, Integer> preferences;
-    //private VirtualSlot vSlot;
     private List<Slot> overlappingSlots;
 
     public GeneralSlot(String slotDatum, int parseInt, boolean type) {
@@ -20,7 +19,6 @@ public class GeneralSlot extends Slot {
         this.day = Day.valueOf(slotDatum);
         this.type = type;
         overlappingSlots = new ArrayList<>();
-        //vSlot = new VirtualSlot(this);
 
         startTime = parseInt;
 
@@ -58,22 +56,23 @@ public class GeneralSlot extends Slot {
         max = slot.max;
         duration = slot.duration;
         type = slot.type;
-        //vSlot = new VirtualSlot(slot.vSlot, this);
         unwanted = slot.unwanted;
         preferences = slot.preferences;
 
     }
 
     public boolean overlap(GeneralSlot slot) {
-        //Missing friday
-        if(slot.getDay() == day){
+        if((slot.getDay() == day) ||
+                (slot.day == Day.FR && day == Day.MO) ||
+                (slot.day == Day.MO && day == Day.MO)){
             if (slot.getStartTime() >= startTime && slot.getStartTime() < (startTime + duration)) {
                 overlappingSlots.add(slot);
                 return true;
             }
             if (slot.getStartTime() + slot.getDuration() >= startTime){
                 return true;
-            }}
+            }
+        }
         return false;
     }
 
@@ -134,24 +133,13 @@ public class GeneralSlot extends Slot {
 
     public List<Slot> getOverlappingSlots() {
         return overlappingSlots;
-        //vSlot.getOverlapping();
     }
 
     @Override
     public boolean checkHardConstraints(Lecture lec, Collection<Slot> courseSlots, Collection<Slot> labSlots) {
         return true;
     }
-
-    /*@Override
-    public List<Pair> getNotPaired() {
-        return vSlot.getNotPaired();
-    }
-
-    @Override
-    public List<Pair> getPaired() {
-        return vSlot.getPairs();
-    }*/
-
+    
     @Override
     public boolean overlappingLectureSections(Lecture lec) {
         return false;

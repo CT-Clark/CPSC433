@@ -88,14 +88,6 @@ public class SearchControl {
                         }
                     }
                 }
-                //No course section should be held at the same time
-                if(lec instanceof Course){
-                    if(lec2 instanceof Course) {
-                        if(lec.department.equals(lec2.department) && lec.number == lec2.number && !lec.equals(lec2)) {
-                            lec.addNotCompatible(lec2);
-                        }
-                    }
-                }
             }
         }
     }
@@ -156,8 +148,6 @@ public class SearchControl {
             }
             }
             best = best.assignLecture(lec813sec, blockedSlot);
-            //best.removeAssignedLecture(lec813sec);
-            //best.removeAssignedLecture(lec813sec);
 
         }
 
@@ -188,7 +178,6 @@ public class SearchControl {
                 }
             }
             best = best.assignLecture(lec913sec, blockedSlot);
-            //best.removeAssignedLecture(lec913sec);
         }
 
     }
@@ -224,10 +213,6 @@ public class SearchControl {
     }
 
     public void countConstraints(List<Lecture> lectures) {
-        /*for(Pair pair : not_compatible) {
-            lectures.get(lectures.indexOf(pair.a)).incrementConstraints();
-            lectures.get(lectures.indexOf(pair.b)).incrementConstraints();
-        }*/
         orderedLectures.addAll(lectures);
     }
 
@@ -264,18 +249,6 @@ public class SearchControl {
 
             partialSolutions.addAll(newPartialSolutions);
 
-            /*Assignment newBest = partialSolutions.poll();
-            for(Assignment singleAssign : partialSolutions) {
-                if(singleAssign.evalValue < newBest.evalValue) {
-                    newBest = singleAssign;
-                }
-                if(singleAssign.evalValue == newBest.evalValue) {
-                    if(singleAssign.unassignedLectures.size() < newBest.unassignedLectures.size()) {
-                        newBest = singleAssign;
-                    }
-                }
-            }
-            best = newBest;*/
             if(partialSolutions.size() == 0) {
                 System.err.println("No solution could be found, which adheres to all hard constraints!");
                 return null;

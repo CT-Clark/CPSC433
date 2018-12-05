@@ -23,10 +23,10 @@ public class ParserTest {
 
     @Test
     void not_compatible_Test() throws IOException {
-        parser = new Parser("resources/Not_compatible_test.txt");
+        parser = new Parser("resources/hard_constraints/Not_compatible_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/Not_compatible_solution.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/Not_compatible_solution.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
@@ -36,10 +36,10 @@ public class ParserTest {
 
     @Test
     void unwanted_Test() throws IOException {
-        parser = new Parser("resources/Unwanted_test.txt");
+        parser = new Parser("resources/hard_constraints/Unwanted_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/Unwanted_solution.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/Unwanted_solution.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
@@ -49,7 +49,7 @@ public class ParserTest {
 
     @Test
     void coursemax_Test() throws IOException {
-        parser = new Parser("resources/Coursemax_test.txt");
+        parser = new Parser("resources/hard_constraints/Coursemax_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
         assertNull(best);
@@ -57,7 +57,7 @@ public class ParserTest {
 
     @Test
     void labmax_Test() throws IOException {
-        parser = new Parser("resources/Labmax_test.txt");
+        parser = new Parser("resources/hard_constraints/Labmax_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
         assertNull(best);
@@ -65,10 +65,10 @@ public class ParserTest {
 
     @Test
     void labsNotOnCourseSlot_Test() throws IOException {
-        parser = new Parser("resources/LabsNotOnCourseSlot_test.txt");
+        parser = new Parser("resources/hard_constraints/LabsNotOnCourseSlot_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/LabsNotOnCourseSlot_solution.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/LabsNotOnCourseSlot_solution.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
@@ -77,15 +77,15 @@ public class ParserTest {
 
     @Test
     void LEC9_EveningSlots_Test() throws IOException {
-        parser = new Parser("resources/LEC9_EveningSlots_test.txt");
+        parser = new Parser("resources/hard_constraints/LEC9_EveningSlots_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/LEC9_EveningSlots_solution1.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/LEC9_EveningSlots_solution1.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
 
-        Stream<String> sol2 = Files.lines(Paths.get("resources/LEC9_EveningSlots_solution2.txt"));
+        Stream<String> sol2 = Files.lines(Paths.get("resources/hard_constraints/LEC9_EveningSlots_solution2.txt"));
         StringBuffer singleSol2 = new StringBuffer();
         sol2.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol2.append(n));
@@ -96,7 +96,7 @@ public class ParserTest {
 
     @Test
     void LEC9_NoEveningSlots_Test() throws IOException {
-        parser = new Parser("resources/LEC9_NoEveningSlots_test.txt");
+        parser = new Parser("resources/hard_constraints/LEC9_NoEveningSlots_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
         assertNull(best);
@@ -104,15 +104,15 @@ public class ParserTest {
 
     @Test
     void Level500CoursesDifferentSlots_Test() throws IOException {
-        parser = new Parser("resources/Level500CoursesDifferentSlots_test.txt");
+        parser = new Parser("resources/hard_constraints/Level500CoursesDifferentSlots_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/Level500CoursesDifferentSlots_solution1.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/Level500CoursesDifferentSlots_solution1.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
 
-        Stream<String> sol2 = Files.lines(Paths.get("resources/Level500CoursesDifferentSlots_solution2.txt"));
+        Stream<String> sol2 = Files.lines(Paths.get("resources/hard_constraints/Level500CoursesDifferentSlots_solution2.txt"));
         StringBuffer singleSol2 = new StringBuffer();
         sol2.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol2.append(n));
@@ -123,7 +123,7 @@ public class ParserTest {
 
     @Test
     void CPSC_Course_OnlyForbiddenTU_Slot_Test() throws IOException {
-        parser = new Parser("resources/CPSC_Course_OnlyForbiddenTU_Slot_test.txt");
+        parser = new Parser("resources/hard_constraints/CPSC_Course_OnlyForbiddenTU_Slot_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
         assertNull(best);
@@ -131,10 +131,10 @@ public class ParserTest {
 
     @Test
     void CPSC_Course_ForbiddenTU_Slot_Test() throws IOException {
-        parser = new Parser("resources/CPSC_Course_ForbiddenTU_Slot_test.txt");
+        parser = new Parser("resources/hard_constraints/CPSC_Course_ForbiddenTU_Slot_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/CPSC_Course_ForbiddenTU_Slot_solution.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/CPSC_Course_ForbiddenTU_Slot_solution.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
@@ -143,15 +143,15 @@ public class ParserTest {
 
     @Test
     void CPSC813_913_Test() throws IOException {
-        parser = new Parser("resources/CPSC813_913_test.txt");
+        parser = new Parser("resources/hard_constraints/CPSC813_913_test.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
-        Stream<String> sol = Files.lines(Paths.get("resources/CPSC813_913_solution1.txt"));
+        Stream<String> sol = Files.lines(Paths.get("resources/hard_constraints/CPSC813_913_solution1.txt"));
         StringBuffer singleSol = new StringBuffer();
         sol.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol.append(n));
 
-        Stream<String> sol2 = Files.lines(Paths.get("resources/CPSC813_913_solution2.txt"));
+        Stream<String> sol2 = Files.lines(Paths.get("resources/hard_constraints/CPSC813_913_solution2.txt"));
         StringBuffer singleSol2 = new StringBuffer();
         sol2.map(s -> new String(s + "\n"))
                 .forEach(n -> singleSol2.append(n));
@@ -162,7 +162,7 @@ public class ParserTest {
 
     @Test
     void example1_Test() throws IOException {
-        parser = new Parser("resources/Example1.txt");
+        parser = new Parser("resources/mixed_examples/Example1.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
@@ -173,7 +173,7 @@ public class ParserTest {
 
     @Test
     void example2_Test() throws IOException {
-        parser = new Parser("resources/Example2.txt");
+        parser = new Parser("resources/mixed_examples/Example2.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
@@ -184,7 +184,7 @@ public class ParserTest {
 
     @Test
     void example3_Test() throws IOException {
-        parser = new Parser("resources/Example3.txt");
+        parser = new Parser("resources/mixed_examples/Example3.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
@@ -195,7 +195,7 @@ public class ParserTest {
 
     @Test
     void example4_Test() throws IOException {
-        parser = new Parser("resources/Example4.txt");
+        parser = new Parser("resources/mixed_examples/Example4.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
@@ -206,7 +206,7 @@ public class ParserTest {
 
     @Test
     void example5_Test() throws IOException {
-        parser = new Parser("resources/Example5.txt");
+        parser = new Parser("resources/mixed_examples/Example5.txt");
         assertThrows(IllegalStateException.class, () -> {
         SearchControl sc = parser.parseInput();
         });
@@ -214,7 +214,7 @@ public class ParserTest {
 
     @Test
     void example6_Test() throws IOException {
-        parser = new Parser("resources/Example6.txt");
+        parser = new Parser("resources/mixed_examples/Example6.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
@@ -223,10 +223,63 @@ public class ParserTest {
 
     @Test
     void example7_Test() throws IOException {
-        parser = new Parser("resources/Example7.txt");
+        parser = new Parser("resources/mixed_examples/Example7.txt");
         SearchControl sc = parser.parseInput();
         Assignment best = sc.searchOptimum();
 
         assertNull(best);
+    }
+
+    @Test
+    void coursemin_Test() throws IOException {
+        parser = new Parser("resources/soft_constraints/Coursemin_test.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        assertEquals(Project.pen_coursemin, best.evalValue);
+    }
+
+    @Test
+    void labsmin_Test() throws IOException {
+        parser = new Parser("resources/soft_constraints/Labsmin_test.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        System.out.println(best.getPrintableSolution());
+
+        assertEquals(2*Project.pen_labsmin, best.evalValue);
+    }
+
+    @Test
+    void preferences_Test() throws IOException {
+        parser = new Parser("resources/soft_constraints/Preferences_test.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        System.out.println(best.getPrintableSolution());
+
+        assertEquals(75, best.evalValue);
+    }
+
+    @Test
+    void notPaired_Test() throws IOException {
+        parser = new Parser("resources/soft_constraints/NotPaired_test.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        System.out.println(best.getPrintableSolution());
+
+        assertEquals(Project.pen_notpaired, best.evalValue);
+    }
+
+    @Test
+    void CPSC_Course_Section_Overlap_Test() throws IOException {
+        parser = new Parser("resources/soft_constraints/CPSC_Course_Section_Overlap.txt");
+        SearchControl sc = parser.parseInput();
+        Assignment best = sc.searchOptimum();
+
+        System.out.println(best.getPrintableSolution());
+
+        assertEquals(Project.pen_section, best.evalValue);
     }
 }
