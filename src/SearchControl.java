@@ -239,7 +239,23 @@ public class SearchControl {
     public Assignment searchOptimum() {
         partialSolutions.add(best);
 
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = 0;
+        long allocatedMemory = 0;
+        long freeMemory = 0;
+
         while(true) {
+            maxMemory = runtime.maxMemory();
+            allocatedMemory = runtime.totalMemory();
+            freeMemory = runtime.freeMemory();
+
+            if(maxMemory == allocatedMemory) {
+                //Running out of memory, only 10MByte left
+                if(freeMemory < 10485760) {
+                    Assignment bestsofar = partialSolutions.poll();
+                    return bestsofar;
+                }
+            }
             if(partialSolutions.peek().finished()) {
                     return partialSolutions.peek();
             }

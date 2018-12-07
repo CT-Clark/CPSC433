@@ -44,7 +44,7 @@ public class Assignment {
       for(Slot slot : courseSlots) {
           int neededCoursesInSlot = slot.getMin() - slot.getAssignedLectures().size();
           if(neededCoursesInSlot > 0) {
-              neededCourses += neededCoursesInSlot;
+              neededCourses++;
           }
       }
 
@@ -52,7 +52,7 @@ public class Assignment {
       for(Slot slot : labSlots) {
           int neededLabsInSlot = slot.getMin() - slot.getAssignedLectures().size();
           if(neededLabsInSlot > 0) {
-              neededLabs += neededLabsInSlot;
+              neededLabs++;
           }
       }
 
